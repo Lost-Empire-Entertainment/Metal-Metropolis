@@ -3,6 +3,8 @@
 //This is free software, and you are welcome to redistribute it under certain conditions.
 //Read LICENSE.md for more information.
 
+#include <string_view>
+
 #include "core/ee_core.hpp"
 #include "graphics/ee_window.hpp"
 
@@ -11,13 +13,17 @@
 using ElypsoEngine::Core::EngineCore;
 using ElypsoEngine::Graphics::EngineWindow;
 
+using std::string_view;
+
+constexpr string_view programName = "Metal Metropolis";
+
 namespace MetalMetropolis::Core
 {
     void GameCore::Initialize()
     {
-        EngineCore::Initialize("1234");
+        EngineCore::Initialize(programName, true);
 
-        EngineWindow::Initialize();
+        EngineWindow::Initialize(programName);
 
         EngineCore::Update();
     }

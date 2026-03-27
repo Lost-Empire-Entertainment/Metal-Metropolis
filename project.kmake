@@ -1,0 +1,86 @@
+#version 1.0
+
+#references
+dir_debug: build/debug-
+dir_release: build/release-
+links_win_deb: "${dir_ee_deb}/${name_ee}d.lib", "${dir_kw_deb}/${name_kw}d.lib", "${dir_kg_deb}/${name_kg}d.lib", "${dir_kp_deb}/${name_kp}d.lib", "${dir_ka_deb}/${name_ka}d.lib", "${dir_kl_deb}/${name_kl}d.lib", "${dir_l_deb}/${name_l}d.lib"
+links_win_rel: "${dir_ee_rel}/${name_ee}.lib", "${dir_kw_rel}/${name_kw}.lib", "${dir_kg_rel}/${name_kg}.lib", "${dir_kp_rel}/${name_kp}.lib", "${dir_ka_rel}/${name_ka}.lib", "${dir_kl_rel}/${name_kl}.lib", "${dir_l_rel}/${name_l}.lib"
+links_lin_deb: "${dir_ee_deb}/lib${name_ee}d.a", "${dir_kw_deb}/lib${name_kw}d.a", "${dir_kg_deb}/lib${name_kg}d.a", "${dir_kp_deb}/lib${name_kp}d.a", "${dir_ka_deb}/lib${name_ka}d.a", "${dir_kl_deb}/lib${name_kl}d.a", "${dir_l_deb}/lib${name_l}d.a"
+links_lin_rel: "${dir_ee_rel}/lib${name_ee}.a", "${dir_kw_rel}/lib${name_kw}.a", "${dir_kg_rel}/lib${name_kg}.a", "${dir_kp_rel}/lib${name_kp}.a", "${dir_ka_rel}/lib${name_ka}.a", "${dir_kl_rel}/lib${name_kl}.a", "${dir_l_rel}/lib${name_l}.a"
+links_win: opengl32, vulkan-1
+links_lin: X11, Xi, GL, vulkan
+//
+// ELYPSO ENGINE
+//
+name_ee: elypsoengine
+dir_ee_rel: ../_external_shared/ElypsoEngine/release
+dir_ee_deb: ../_external_shared/ElypsoEngine/debug
+//
+// KALAWINDOW
+//
+name_kw: kalawindow
+dir_kw_rel: ../_external_shared/KalaWindow/release
+dir_kw_deb: ../_external_shared/KalaWindow/debug
+//
+// KALAGRAPHICS
+//
+name_kg: kalagraphics
+dir_kg_rel: ../_external_shared/KalaGraphics/release
+dir_kg_deb: ../_external_shared/KalaGraphics/debug
+//
+// KALAPHYSICS
+//
+name_kp: kalaphysics
+dir_kp_rel: ../_external_shared/KalaPhysics/release
+dir_kp_deb: ../_external_shared/KalaPhysics/debug
+//
+// KALAAUDIO
+//
+name_ka: kalaaudio
+dir_ka_rel: ../_external_shared/KalaAudio/release
+dir_ka_deb: ../_external_shared/KalaAudio/debug
+//
+// KALALUA
+//
+name_kl: kalalua
+dir_kl_rel: ../_external_shared/KalaLua/release
+dir_kl_deb: ../_external_shared/KalaLua/debug
+//
+// LUA
+//
+name_l: lua
+dir_l_rel: ../_external_shared/lua/release
+dir_l_deb: ../_external_shared/lua/debug
+
+#global
+binaryname: Metal metropolis
+binarytype: executable
+standard: c++20
+sources: "src"
+headers: "include", "../_external_shared/KalaHeaders", "../_external_shared/ElypsoEngine/include", "../_external_shared/KalaWindow/include", "../_external_shared/KalaGraphics/include", "../_external_shared/KalaPhysics/include", "../_external_shared/KalaAudio/include", "../_external_shared/KalaLua/include", "../_external_shared/lua/include"
+warninglevel: normal
+customflags: export-compile-commands, export-vscode-sln
+
+#profile debug-windows
+compiler: clang-cl
+buildtype: debug
+buildpath: "${dir_debug}windows"
+links: ${links_win_deb}, ${links_win}
+
+#profile release-windows
+compiler: clang-cl
+buildtype: release
+buildpath: "${dir_release}windows"
+links: ${links_win_rel}, ${links_win}
+
+#profile debug-linux
+compiler: clang++
+buildtype: debug
+buildpath: "${dir_debug}linux"
+links: ${links_lin_deb}, ${links_lin}
+
+#profile release-linux
+compiler: clang++
+buildtype: release
+buildpath: "${dir_release}linux"
+links: ${links_lin_rel}, ${links_lin}

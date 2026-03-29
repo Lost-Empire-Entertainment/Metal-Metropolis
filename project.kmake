@@ -1,6 +1,7 @@
 #version 1.0
 
 #references
+name_bin: MetalMetropolis
 dir_debug: build/debug-
 dir_release: build/release-
 links_win_deb: "${dir_ee_deb}/${name_ee}d.lib", "${dir_kw_deb}/${name_kw}d.lib", "${dir_kg_deb}/${name_kg}d.lib", "${dir_kp_deb}/${name_kp}d.lib", "${dir_ka_deb}/${name_ka}d.lib", "${dir_kl_deb}/${name_kl}d.lib", "${dir_l_deb}/${name_l}d.lib"
@@ -51,9 +52,10 @@ dir_kl_deb: ../../external-shared/KalaLua/debug
 name_l: lua
 dir_l_rel: ../../external-shared/lua/release
 dir_l_deb: ../../external-shared/lua/debug
+comm_objcopy: objcopy --remove-section .note.gnu.property
 
 #global
-binaryname: Metal metropolis
+binaryname: ${name_bin}
 binarytype: executable
 standard: c++20
 sources: "src"
@@ -78,9 +80,14 @@ compiler: clang++
 buildtype: debug
 buildpath: "${dir_debug}linux"
 links: ${links_lin_deb}, ${links_lin}
+//strips stupid avx requirements that cachyos seems to add for no reason
+postbuildaction: ${comm_objcopy} ${dir_release}linux/${name_bin}
 
 #profile release-linux
 compiler: clang++
 buildtype: release
 buildpath: "${dir_release}linux"
 links: ${links_lin_rel}, ${links_lin}
+//strips stupid avx requirements that cachyos seems to add for no reason
+postbuildaction: ${comm_objcopy} ${dir_release}linux/${name_bin}
+postbuildaction: strip --strip-unneeded ${dir_release}linux/${name_bin}

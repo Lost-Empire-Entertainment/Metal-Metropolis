@@ -81,7 +81,7 @@ buildtype: debug
 buildpath: "${dir_debug}linux"
 links: ${links_lin_deb}, ${links_lin}
 //strips stupid avx requirements that cachyos seems to add for no reason
-postbuildaction: ${comm_objcopy} ${dir_release}linux/${name_bin}
+postbuildaction: ${comm_objcopy} ${dir_debug}linux/${name_bin}
 
 #profile release-linux
 compiler: clang++

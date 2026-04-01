@@ -6,22 +6,32 @@
 #include <string_view>
 #include <thread>
 #include <chrono>
+#include <filesystem>
+
+#include "math_utils.hpp"
 
 #include "core/ee_core.hpp"
 #include "graphics/ee_render.hpp"
 #include "graphics/ee_window.hpp"
+#include "entity/ee_entity_object.hpp"
+#include "objects/models/kg_model_primitive.hpp"
 
 #include "core/core.hpp"
+
+using KalaHeaders::KalaMath::vec3;
 
 using ElypsoEngine::Core::EngineCore;
 using ElypsoEngine::Graphics::Render;
 using ElypsoEngine::Graphics::EngineWindow;
+using ElypsoEngine::Entity::Object;
+using KalaGraphics::Object::CubeDetails;
 
 using std::string_view;
 using std::this_thread::sleep_for;
 using std::chrono::milliseconds;
+using std::filesystem::path;
 
-constexpr string_view programName = "Metal Metropolis";
+constexpr string_view programName = "Metal Metropolis Pre-Release 0003";
 
 namespace MetalMetropolis::Core
 {
@@ -29,7 +39,20 @@ namespace MetalMetropolis::Core
     {
         EngineCore::Initialize(programName);
 
-        EngineWindow::Initialize(programName);
+        EngineWindow* ew = EngineWindow::Initialize(programName);
+
+        CubeDetails cDet =
+        {
+            .edges = 4
+        };
+        Object::Initialize(
+            "cube",
+            path("files") / "shaders",
+            ew->GetID(),
+            {},
+            {},
+            vec3(1),
+            cDet);
 
         while (true)
         {

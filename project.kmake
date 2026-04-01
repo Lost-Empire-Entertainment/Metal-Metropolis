@@ -59,7 +59,7 @@ binaryname: ${name_bin}
 binarytype: executable
 standard: c++20
 sources: "src"
-headers: "include", "../../external-shared/KalaHeaders", "../../external-shared/ElypsoEngine/include", "../../external-shared/KalaWindow/include", "../../external-shared/KalaGraphics/include", "../../external-shared/KalaPhysics/include", "../../external-shared/KalaAudio/include", "../../external-shared/KalaLua/include", "../../external-shared/lua/include"
+headers: "include", "../../external-shared/KalaHeaders", "../../external-shared/OpenGL", "../../external-shared/ElypsoEngine/include", "../../external-shared/KalaWindow/include", "../../external-shared/KalaGraphics/include", "../../external-shared/KalaPhysics/include", "../../external-shared/KalaAudio/include", "../../external-shared/KalaLua/include", "../../external-shared/lua/include"
 warninglevel: normal
 customflags: export-compile-commands, export-vscode-sln
 
@@ -68,18 +68,30 @@ compiler: clang-cl
 buildtype: debug
 buildpath: "${dir_debug}windows"
 links: ${links_win_deb}, ${links_win}
+postbuildaction: rmdir /s /q "files\\shaders"
+postbuildaction: xcopy "..\\..\\external-shared\\KalaGraphics\\include\\_internal\\opengl\\shader\\." "files\\shaders" /e /i /h
+postbuildaction: rmdir /s /q "${dir_debug}windows\\files"
+postbuildaction: xcopy "files" "${dir_debug}windows\\files" /e /i /h
 
 #profile release-windows
 compiler: clang-cl
 buildtype: release
 buildpath: "${dir_release}windows"
 links: ${links_win_rel}, ${links_win}
+postbuildaction: rmdir /s /q "files\\shaders"
+postbuildaction: xcopy "..\\..\\external-shared\\KalaGraphics\\include\\_internal\\opengl\\shader\\." "files\\shaders" /e /i /h
+postbuildaction: rmdir /s /q "${dir_release}windows\\files"
+postbuildaction: xcopy "files" "${dir_release}windows\\files" /e /i /h
 
 #profile debug-linux
 compiler: clang++
 buildtype: debug
 buildpath: "${dir_debug}linux"
 links: ${links_lin_deb}, ${links_lin}
+postbuildaction: rm -rf "files/shaders"
+postbuildaction: cp -r "../../external-shared/KalaGraphics/include/_internal/opengl/shader/." "files/shaders"
+postbuildaction: rm -rf "${dir_debug}linux/files"
+postbuildaction: cp -r "files" "${dir_debug}linux/files"
 //strips stupid avx requirements that cachyos seems to add for no reason
 postbuildaction: ${comm_objcopy} ${dir_debug}linux/${name_bin}
 
@@ -88,6 +100,10 @@ compiler: clang++
 buildtype: release
 buildpath: "${dir_release}linux"
 links: ${links_lin_rel}, ${links_lin}
+postbuildaction: rm -rf "files/shaders"
+postbuildaction: cp -r "../../external-shared/KalaGraphics/include/_internal/opengl/shader/." "files/shaders"
+postbuildaction: rm -rf "${dir_release}linux/files"
+postbuildaction: cp -r "files" "${dir_release}linux/files"
 //strips stupid avx requirements that cachyos seems to add for no reason
 postbuildaction: ${comm_objcopy} ${dir_release}linux/${name_bin}
 postbuildaction: strip --strip-unneeded ${dir_release}linux/${name_bin}

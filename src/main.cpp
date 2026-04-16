@@ -14,7 +14,7 @@
 #include "graphics/ee_render.hpp"
 #include "graphics/ee_window.hpp"
 #include "entity/ee_entity_object.hpp"
-#include "objects/models/kg_model_primitive.hpp"
+#include "graphics/models/kg_model_primitive.hpp"
 
 using KalaHeaders::KalaMath::vec3;
 
@@ -22,7 +22,7 @@ using ElypsoEngine::Core::EngineCore;
 using ElypsoEngine::Graphics::Render;
 using ElypsoEngine::Graphics::EngineWindow;
 using ElypsoEngine::Entity::Object;
-using KalaGraphics::Object::CubeDetails;
+using KalaGraphics::Graphics::CubeDetails;
 
 using std::string_view;
 using std::this_thread::sleep_for;
@@ -35,8 +35,10 @@ int main()
 { 
     EngineCore::Initialize(programName);
 
+    
     EngineWindow* ew = EngineWindow::Initialize(programName);
 
+    /*
     Object::Initialize(
         "cube",
         path("files") / "shaders",
@@ -45,6 +47,7 @@ int main()
         {},
         vec3(1),
         CubeDetails{});
+    */
 
     while (true)
     {

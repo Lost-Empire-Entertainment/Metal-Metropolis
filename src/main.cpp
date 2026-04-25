@@ -15,6 +15,9 @@
 #include "graphics/ee_window.hpp"
 #include "entity/ee_entity_object.hpp"
 #include "graphics/models/kg_model_primitive.hpp"
+#include "core/kw_input.hpp"
+#include "vulkan/kw_vulkan.hpp"
+#include "_internal/_kg_vulkan.hpp"
 
 using KalaHeaders::KalaMath::vec3;
 
@@ -23,20 +26,25 @@ using ElypsoEngine::Graphics::Render;
 using ElypsoEngine::Graphics::EngineWindow;
 using ElypsoEngine::Entity::Object;
 using KalaGraphics::Graphics::CubeDetails;
+using KalaWindow::Core::Input;
+using KalaWindow::Vulkan::Vulkan_Global;
+using KalaGraphics::Internal::Vulkan_Core;
 
 using std::string_view;
 using std::this_thread::sleep_for;
 using std::chrono::milliseconds;
 using std::filesystem::path;
 
-constexpr string_view programName = "Metal Metropolis Pre-Release 0003";
+constexpr string_view gameTitle = "Metal Metropolis Pre-Release 0003";
 
 int main()
 { 
-    EngineCore::Initialize(programName);
+    EngineCore::Initialize(gameTitle);
+    EngineWindow* ew = EngineWindow::Initialize(gameTitle);
 
-    
-    EngineWindow* ew = EngineWindow::Initialize(programName);
+    //Input::SetVerboseLoggingState(true);
+    //Vulkan_Global::SetVerboseLoggingState(true);
+    //Vulkan_Core::SetVerboseLoggingState(true);
 
     /*
     Object::Initialize(

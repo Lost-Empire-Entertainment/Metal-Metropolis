@@ -68,8 +68,8 @@ compiler: clang-cl
 buildtype: debug
 buildpath: "${dir_debug}windows"
 links: ${links_win_deb}, ${links_win}
-//postbuildaction: rmdir /s /q "files\\shaders"
-//postbuildaction: xcopy "..\\..\\external-shared\\KalaGraphics\\include\\_internal\\shader\\." "files\\shaders" /e /i /h
+postbuildaction: rmdir /s /q "files\\shaders"
+postbuildaction: xcopy "..\\..\\external-shared\\KalaGraphics\\files\\shaders\\." "files\\shaders" /e /i /h
 postbuildaction: rmdir /s /q "${dir_debug}windows\\files"
 postbuildaction: xcopy "files" "${dir_debug}windows\\files" /e /i /h
 
@@ -78,8 +78,8 @@ compiler: clang-cl
 buildtype: release
 buildpath: "${dir_release}windows"
 links: ${links_win_rel}, ${links_win}
-//postbuildaction: rmdir /s /q "files\\shaders"
-//postbuildaction: xcopy "..\\..\\external-shared\\KalaGraphics\\include\\_internal\\shader\\." "files\\shaders" /e /i /h
+postbuildaction: rmdir /s /q "files\\shaders"
+postbuildaction: xcopy "..\\..\\external-shared\\KalaGraphics\\files\\shaders\\." "files\\shaders" /e /i /h
 postbuildaction: rmdir /s /q "${dir_release}windows\\files"
 postbuildaction: xcopy "files" "${dir_release}windows\\files" /e /i /h
 
@@ -88,8 +88,8 @@ compiler: clang++
 buildtype: debug
 buildpath: "${dir_debug}linux"
 links: ${links_lin_deb}, ${links_lin}
-//postbuildaction: rm -rf "files/shaders"
-//postbuildaction: cp -r "../../external-shared/KalaGraphics/include/_internal/vulkan/shader/." "files/shaders"
+postbuildaction: rm -rf "files/shaders"
+postbuildaction: cp -r "../../external-shared/KalaGraphics/files/shaders/." "files/shaders"
 postbuildaction: rm -rf "${dir_debug}linux/files"
 postbuildaction: cp -r "files" "${dir_debug}linux/files"
 //strips stupid avx requirements that cachyos seems to add for no reason
@@ -100,8 +100,8 @@ compiler: clang++
 buildtype: release
 buildpath: "${dir_release}linux"
 links: ${links_lin_rel}, ${links_lin}
-//postbuildaction: rm -rf "files/shaders"
-//postbuildaction: cp -r "../../external-shared/KalaGraphics/include/_internal/vulkan/shader/." "files/shaders"
+postbuildaction: rm -rf "files/shaders"
+postbuildaction: cp -r "../../external-shared/KalaGraphics/files/shaders/." "files/shaders"
 postbuildaction: rm -rf "${dir_release}linux/files"
 postbuildaction: cp -r "files" "${dir_release}linux/files"
 //strips stupid avx requirements that cachyos seems to add for no reason

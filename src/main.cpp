@@ -17,7 +17,7 @@
 #include "graphics/models/kg_model_primitive.hpp"
 #include "core/kw_input.hpp"
 #include "vulkan/kw_vulkan.hpp"
-#include "_internal/_kg_vulkan.hpp"
+#include "graphics/kg_vulkan.hpp"
 
 using KalaHeaders::KalaMath::vec3;
 
@@ -28,7 +28,7 @@ using ElypsoEngine::Entity::Object;
 using KalaGraphics::Graphics::CubeDetails;
 using KalaWindow::Core::Input;
 using KalaWindow::Vulkan::Vulkan_Global;
-using KalaGraphics::Internal::Vulkan_Core;
+using KalaGraphics::Graphics::Vulkan_Core;
 
 using std::string_view;
 using std::this_thread::sleep_for;
@@ -44,7 +44,7 @@ int main()
 
     //Input::SetVerboseLoggingState(true);
     //Vulkan_Global::SetVerboseLoggingState(true);
-    //Vulkan_Core::SetVerboseLoggingState(true);
+    Vulkan_Core::SetVerboseLoggingState(true);
 
     /*
     Object::Initialize(

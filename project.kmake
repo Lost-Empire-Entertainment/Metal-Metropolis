@@ -59,7 +59,7 @@ binaryname: ${name_bin}
 binarytype: executable
 standard: c++20
 sources: "src"
-headers: "include", "../../external-shared/KalaHeaders", "../../external-shared/Vulkan", "../../external-shared/ElypsoEngine/include", "../../external-shared/KalaWindow/include", "../../external-shared/KalaGraphics/include", "../../external-shared/KalaPhysics/include", "../../external-shared/KalaAudio/include", "../../external-shared/KalaLua/include", "../../external-shared/lua/include"
+headers: "include", "../../external-shared/KalaHeaders", "../../external-shared/Vulkan", "../../external-shared/ElypsoEngine/include", "../../external-shared/KalaWindow/include", "../../external-shared/KalaGraphics/include", "../../external-shared/KalaPhysics/include", "../../external-shared/KalaAudio/include", "../../external-shared/KalaLua/include", "../../external-shared/lua/include", "../../external-shared/Vulkan/Include"
 warninglevel: normal
 customflags: export-compile-commands, export-vscode-sln
 

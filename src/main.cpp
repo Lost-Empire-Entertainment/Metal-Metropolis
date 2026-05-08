@@ -28,7 +28,7 @@ using ElypsoEngine::Entity::Object;
 using KalaGraphics::Graphics::CubeDetails;
 using KalaWindow::Core::Input;
 using KalaWindow::Vulkan::Vulkan_Global;
-using KalaGraphics::Graphics::Vulkan_Core;
+using KalaGraphics::Graphics::VulkanContext;
 
 using std::string_view;
 using std::this_thread::sleep_for;
@@ -44,7 +44,7 @@ int main()
 
     //Input::SetVerboseLoggingState(true);
     //Vulkan_Global::SetVerboseLoggingState(true);
-    Vulkan_Core::SetVerboseLoggingState(true);
+    VulkanContext::SetVerboseLoggingState(true);
 
     /*
     Object::Initialize(

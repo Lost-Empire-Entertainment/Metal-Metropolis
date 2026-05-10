@@ -44,7 +44,7 @@ int main()
 
     //Input::SetVerboseLoggingState(true);
     //Vulkan_Global::SetVerboseLoggingState(true);
-    VulkanContext::SetVerboseLoggingState(true);
+    //VulkanContext::SetVerboseLoggingState(true);
 
     /*
     Object::Initialize(

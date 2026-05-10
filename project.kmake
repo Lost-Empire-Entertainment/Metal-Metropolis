@@ -8,7 +8,7 @@ links_win_deb: "${dir_ee_deb}/${name_ee}d.lib", "${dir_kw_deb}/${name_kw}d.lib",
 links_win_rel: "${dir_ee_rel}/${name_ee}.lib", "${dir_kw_rel}/${name_kw}.lib", "${dir_kg_rel}/${name_kg}.lib", "${dir_kp_rel}/${name_kp}.lib", "${dir_ka_rel}/${name_ka}.lib", "${dir_kl_rel}/${name_kl}.lib", "${dir_l_rel}/${name_l}.lib"
 links_lin_deb: "${dir_ee_deb}/lib${name_ee}d.a", "${dir_kw_deb}/lib${name_kw}d.a", "${dir_kg_deb}/lib${name_kg}d.a", "${dir_kp_deb}/lib${name_kp}d.a", "${dir_ka_deb}/lib${name_ka}d.a", "${dir_kl_deb}/lib${name_kl}d.a", "${dir_l_deb}/lib${name_l}d.a"
 links_lin_rel: "${dir_ee_rel}/lib${name_ee}.a", "${dir_kw_rel}/lib${name_kw}.a", "${dir_kg_rel}/lib${name_kg}.a", "${dir_kp_rel}/lib${name_kp}.a", "${dir_ka_rel}/lib${name_ka}.a", "${dir_kl_rel}/lib${name_kl}.a", "${dir_l_rel}/lib${name_l}.a"
-links_win: vulkan-1
+links_win: msvcrt, msvcprt, ucrt, vcruntime, winmm, dbghelp, dwmapi, wtsapi32, runtimeobject, "../../external-shared/Vulkan/vulkan-1.lib"
 links_lin: X11, Xi, vulkan
 //
 // ELYPSO ENGINE
@@ -61,26 +61,27 @@ standard: c++20
 sources: "src"
 headers: "include", "../../external-shared/KalaHeaders", "../../external-shared/Vulkan", "../../external-shared/ElypsoEngine/include", "../../external-shared/KalaWindow/include", "../../external-shared/KalaGraphics/include", "../../external-shared/KalaPhysics/include", "../../external-shared/KalaAudio/include", "../../external-shared/KalaLua/include", "../../external-shared/lua/include", "../../external-shared/Vulkan/Include"
 warninglevel: normal
+defines: LIB_STATIC
 customflags: export-compile-commands, export-vscode-sln
 
 #profile debug-windows
-compiler: clang-cl
+compiler: clang++
 buildtype: debug
 buildpath: "${dir_debug}windows"
 links: ${links_win_deb}, ${links_win}
 postbuildaction: rmdir /s /q "files\\shaders"
 postbuildaction: xcopy "..\\..\\external-shared\\KalaGraphics\\files\\shaders\\." "files\\shaders" /e /i /h
-postbuildaction: rmdir /s /q "${dir_debug}windows\\files"
+postbuildaction: IF EXIST "${dir_debug}windows\\files" rmdir /s /q "${dir_debug}windows\\files"
 postbuildaction: xcopy "files" "${dir_debug}windows\\files" /e /i /h
 
 #profile release-windows
-compiler: clang-cl
+compiler: clang++
 buildtype: release
 buildpath: "${dir_release}windows"
 links: ${links_win_rel}, ${links_win}
 postbuildaction: rmdir /s /q "files\\shaders"
 postbuildaction: xcopy "..\\..\\external-shared\\KalaGraphics\\files\\shaders\\." "files\\shaders" /e /i /h
-postbuildaction: rmdir /s /q "${dir_release}windows\\files"
+postbuildaction: IF EXIST "${dir_release}windows\\files" rmdir /s /q "${dir_release}windows\\files"
 postbuildaction: xcopy "files" "${dir_release}windows\\files" /e /i /h
 
 #profile debug-linux

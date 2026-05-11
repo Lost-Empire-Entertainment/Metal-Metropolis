@@ -35,7 +35,7 @@ using std::this_thread::sleep_for;
 using std::chrono::milliseconds;
 using std::filesystem::path;
 
-constexpr string_view gameTitle = "Metal Metropolis Pre-Release 0003";
+constexpr string_view gameTitle = "Metal Metropolis Pre-Release 0004";
 
 int main()
 { 

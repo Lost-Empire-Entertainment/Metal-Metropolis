@@ -55,6 +55,8 @@ dir_l_deb: ../../external-shared/lua/debug
 comm_objcopy: objcopy --remove-section .note.gnu.property
 
 #global
+compilerlauncher: ccache
+compiler: clang++
 binaryname: ${name_bin}
 binarytype: executable
 standard: c++20
@@ -65,7 +67,6 @@ defines: LIB_STATIC
 customflags: export-compile-commands, export-vscode-sln
 
 #profile debug-windows
-compiler: clang++
 buildtype: debug
 buildpath: "${dir_debug}windows"
 links: ${links_win_deb}, ${links_win}
@@ -75,7 +76,6 @@ postbuildaction: IF EXIST "${dir_debug}windows\\files" rmdir /s /q "${dir_debug}
 postbuildaction: xcopy "files" "${dir_debug}windows\\files" /e /i /h
 
 #profile release-windows
-compiler: clang++
 buildtype: release
 buildpath: "${dir_release}windows"
 links: ${links_win_rel}, ${links_win}
@@ -85,7 +85,6 @@ postbuildaction: IF EXIST "${dir_release}windows\\files" rmdir /s /q "${dir_rele
 postbuildaction: xcopy "files" "${dir_release}windows\\files" /e /i /h
 
 #profile debug-linux
-compiler: clang++
 buildtype: debug
 buildpath: "${dir_debug}linux"
 links: ${links_lin_deb}, ${links_lin}
@@ -97,7 +96,6 @@ postbuildaction: cp -r "files" "${dir_debug}linux/files"
 postbuildaction: ${comm_objcopy} ${dir_debug}linux/${name_bin}
 
 #profile release-linux
-compiler: clang++
 buildtype: release
 buildpath: "${dir_release}linux"
 links: ${links_lin_rel}, ${links_lin}

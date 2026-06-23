@@ -78,6 +78,7 @@ postbuildaction: xcopy "files" "${dir_debug}windows\\files" /e /i /h
 #profile release-windows
 buildtype: release
 buildpath: "${dir_release}windows"
+//customflags: generate-symbols
 links: ${links_win_rel}, ${links_win}
 postbuildaction: rmdir /s /q "files\\shaders"
 postbuildaction: xcopy "..\\..\\external-shared\\KalaGraphics\\files\\shaders\\." "files\\shaders" /e /i /h

@@ -34,7 +34,10 @@ constexpr string_view gameTitle = "Metal Metropolis Pre-Release 1";
 int main()
 { 
     EngineCore::Initialize(gameTitle);
-    EngineWindow* ewin = EngineWindow::Initialize(gameTitle);
+    EngineWindow* ewin = EngineWindow::Initialize(
+        gameTitle,
+        100,
+        { 800, 600 });
 
     ProcessWindow* pw = ProcessWindow::GetRegistry().GetContent(ewin->GetWindowContextID());
     if (!pw)
@@ -44,8 +47,7 @@ int main()
             "Failed to get process window from ID '" + to_string(ewin->GetWindowContextID()) + "'");
     }
 
-    pw->SetMinSize(800);
-    pw->SetMaxSize(10000);
+    pw->SetMinSize({800, 600});
 
     while (true)
     {

@@ -77,8 +77,8 @@ postbuildaction: xcopy "..\\..\\external-shared\\KalaGraphics\\files\\shaders\\.
 postbuildaction: IF EXIST "${dir_debug}windows\\files" rmdir /s /q "${dir_debug}windows\\files"
 postbuildaction: xcopy "files" "${dir_debug}windows\\files" /e /i /h
 //copy files for vk_layer_path
-postbuildaction: xcopy /y "${vkdir_win}\\VkLayer_khronos_validation.dll" "${dir_debug}windows\\"
-postbuildaction: xcopy /y "${vkdir_win}\\VkLayer_khronos_validation.json" "${dir_debug}windows\\"
+postbuildaction: xcopy /y /d "${vkdir_win}\\VkLayer_khronos_validation.dll" "${dir_debug}windows\\"
+postbuildaction: xcopy /y /d "${vkdir_win}\\VkLayer_khronos_validation.json" "${dir_debug}windows\\"
 
 #profile release-windows
 buildtype: release

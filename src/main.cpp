@@ -9,11 +9,17 @@
 
 #include "math_utils.hpp"
 
+#include "test/crash_test.hpp"
 #include "core/ee_core.hpp"
 #include "graphics/ee_render.hpp"
 #include "graphics/ee_window.hpp"
 
 using KalaHeaders::KalaMath::vec3;
+
+using MetalMetropolis::Test::AccessViolationType;
+using MetalMetropolis::Test::Crash_AccessViolation;
+using MetalMetropolis::Test::Crash_StackOverflow;
+using MetalMetropolis::Test::Crash_DivideByZero;
 
 using ElypsoEngine::Core::EngineCore;
 using ElypsoEngine::Graphics::Render;
@@ -35,9 +41,5 @@ int main()
         Render::Update();
 
         sleep_for(milliseconds(1));
-
-        //crash test
-        //volatile int* crashPtr = nullptr;
-        //*crashPtr = 42;
     }
 }

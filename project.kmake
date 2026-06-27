@@ -10,6 +10,8 @@ links_lin_deb: "${dir_ee_deb}/lib${name_ee}d.a", "${dir_kw_deb}/lib${name_kw}d.a
 links_lin_rel: "${dir_ee_rel}/lib${name_ee}.a", "${dir_kw_rel}/lib${name_kw}.a", "${dir_kg_rel}/lib${name_kg}.a", "${dir_kp_rel}/lib${name_kp}.a", "${dir_ka_rel}/lib${name_ka}.a", "${dir_kl_rel}/lib${name_kl}.a", "${dir_l_rel}/lib${name_l}.a"
 links_win: msvcrt, msvcprt, ucrt, vcruntime, winmm, dbghelp, dwmapi, wtsapi32, runtimeobject, "../../external-shared/Vulkan/vulkan-1.lib"
 links_lin: X11, Xi, vulkan
+vkdir_win: ..\\..\\external-shared\\Vulkan
+
 //
 // ELYPSO ENGINE
 //
@@ -74,11 +76,14 @@ postbuildaction: rmdir /s /q "files\\shaders"
 postbuildaction: xcopy "..\\..\\external-shared\\KalaGraphics\\files\\shaders\\." "files\\shaders" /e /i /h
 postbuildaction: IF EXIST "${dir_debug}windows\\files" rmdir /s /q "${dir_debug}windows\\files"
 postbuildaction: xcopy "files" "${dir_debug}windows\\files" /e /i /h
+//copy files for vk_layer_path
+postbuildaction: xcopy /y "${vkdir_win}\\VkLayer_khronos_validation.dll" "${dir_debug}windows\\"
+postbuildaction: xcopy /y "${vkdir_win}\\VkLayer_khronos_validation.json" "${dir_debug}windows\\"
 
 #profile release-windows
 buildtype: release
 buildpath: "${dir_release}windows"
-//customflags: generate-symbols
+customflags: no-console//, generate-symbols
 links: ${links_win_rel}, ${links_win}
 postbuildaction: rmdir /s /q "files\\shaders"
 postbuildaction: xcopy "..\\..\\external-shared\\KalaGraphics\\files\\shaders\\." "files\\shaders" /e /i /h

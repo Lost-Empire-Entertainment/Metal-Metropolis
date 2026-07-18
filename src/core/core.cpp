@@ -3,13 +3,28 @@
 //This is free software, and you are welcome to redistribute it under certain conditions.
 //Read LICENSE.md for more information.
 
+#include "log_utils.hpp"
+#include "key_standards.hpp"
+
 #include "core/ee_core.hpp"
 #include "graphics/ee_window.hpp"
+#include "graphics/ee_scene.hpp"
 #include "graphics/kw_window.hpp"
+#include "core/kw_input.hpp"
+
+using KalaHeaders::KalaLog::Log;
+using KalaHeaders::KalaLog::LogType;
+using KalaHeaders::KalaKeyStandards::MouseButton;
 
 using ElypsoEngine::Core::AppConfig;
 using ElypsoEngine::Graphics::EngineWindow;
+using ElypsoEngine::Graphics::Scene;
 using KalaWindow::Graphics::ProcessWindow;
+using KalaWindow::Core::Input;
+
+Input* input{};
+
+using std::to_string;
 
 extern const AppConfig ElypsoEngine::Core::appConfig = 
 {
@@ -21,11 +36,45 @@ void ElypsoEngine::Core::Init()
 {
     EngineWindow* ew = EngineWindow::GetRegistry().runtimeContent[0];
     ProcessWindow* pw = ProcessWindow::GetRegistry().GetContent(ew->GetWindowContextID());
+    input = Input::GetRegistry().GetContent(pw->GetInputID());
 
     pw->SetMinSize({ 800, 600 });
+
+    Scene* activeScene = Scene::GetRegistry().GetContent(ew->GetActiveSceneID());
+
+    if (!activeScene)
+    {
+        Log::Print(
+            "Failed to get active scene title because scene '" + to_string(ew->GetActiveSceneID()) + "' was not found!",
+            "MM_MAIN",
+            LogType::LOG_ERROR,
+            2);
+
+        return;
+    }
+
+    Log::Print(
+        "Scene name: " + string(activeScene->GetTitle()),
+        "MM_MAIN",
+        LogType::LOG_INFO);
 }
 
 void ElypsoEngine::Core::Update()
 {
-    
+    if (input->IsMouseButtonPressed(MouseButton::M_MIDDLE))
+    {
+        Log::Print("middle button click");
+    }
+    if (input->IsMouseButtonReleased(MouseButton::M_MIDDLE))
+    {
+        Log::Print("middle button release");
+    }
+    if (input->IsMouseButtonHeld(MouseButton::M_LEFT))
+    {
+        Log::Print("left button held");
+    }
+    if (input->IsMouseButtonDragging(MouseButton::M_RIGHT))
+    {
+        Log::Print("right button dragging");
+    }
 }

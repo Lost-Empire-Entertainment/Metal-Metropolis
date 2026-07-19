@@ -45,8 +45,6 @@ void ElypsoEngine::Core::Init()
     EngineWindow* ew = EngineWindow::GetRegistry().runtimeContent[0];
     ProcessWindow* pw = ProcessWindow::GetRegistry().GetContent(ew->GetWindowContextID());
     input = Input::GetRegistry().GetContent(pw->GetInputID());
-    
-    Input::SetVerboseLoggingState(true);
 
     pw->SetMinSize({ 800, 600 });
 

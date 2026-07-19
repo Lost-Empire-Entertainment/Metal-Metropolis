@@ -14,6 +14,7 @@
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
+using KalaHeaders::KalaKeyStandards::KeyboardButton;
 using KalaHeaders::KalaKeyStandards::MouseButton;
 
 using ElypsoEngine::Core::AppConfig;
@@ -21,10 +22,17 @@ using ElypsoEngine::Graphics::EngineWindow;
 using ElypsoEngine::Graphics::Scene;
 using KalaWindow::Graphics::ProcessWindow;
 using KalaWindow::Core::Input;
-
-Input* input{};
+using KalaWindow::Core::InputCode;
 
 using std::to_string;
+
+static constexpr InputCode ic[] = 
+{
+    { .kb = KeyboardButton::K_LEFT_CTRL },
+    { .mb = MouseButton::M_MIDDLE }
+};
+
+Input* input{};
 
 extern const AppConfig ElypsoEngine::Core::appConfig = 
 {
@@ -61,20 +69,9 @@ void ElypsoEngine::Core::Init()
 
 void ElypsoEngine::Core::Update()
 {
-    if (input->IsMouseButtonPressed(MouseButton::M_MIDDLE))
+    if (input->IsComboPressed(ic))
     {
-        Log::Print("middle button click");
-    }
-    if (input->IsMouseButtonReleased(MouseButton::M_MIDDLE))
-    {
-        Log::Print("middle button release");
-    }
-    if (input->IsMouseButtonHeld(MouseButton::M_LEFT))
-    {
-        Log::Print("left button held");
-    }
-    if (input->IsMouseButtonDragging(MouseButton::M_RIGHT))
-    {
-        Log::Print("right button dragging");
+        Log::Print("pressed left ctrl + middle mouse button, calling engine shutdown from game");
+        EngineCore::Shutdown();
     }
 }

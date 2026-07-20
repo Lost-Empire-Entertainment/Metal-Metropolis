@@ -74,7 +74,10 @@ void ElypsoEngine::Core::Init()
 
 void ElypsoEngine::Core::FixedUpdate()
 {
-
+    Log::Print(
+        "This is a fixed update...",
+        "MM_MAIN",
+        LogType::LOG_INFO);
 }
 
 void ElypsoEngine::Core::Update()

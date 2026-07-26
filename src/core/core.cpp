@@ -14,6 +14,7 @@
 #include "graphics/kw_window.hpp"
 #include "core/kw_input.hpp"
 #include "core/kg_context.hpp"
+#include "resources/kg_shader.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -26,8 +27,9 @@ using KalaWindow::Graphics::ProcessWindow;
 using KalaWindow::Core::Input;
 using KalaGraphics::Core::GraphicsContext;
 using KalaGraphics::Core::VSyncState;
+using KalaGraphics::Resources::Shader;
+using KalaGraphics::Resources::ShaderData;
 
-using std::to_string;
 using std::string;
 using std::chrono::time_point;
 using std::chrono::steady_clock;
@@ -64,6 +66,19 @@ void ElypsoEngine::Core::Init()
     ProcessWindow* pw = ProcessWindow::GetRegistry().GetContent(ew->GetWindowContextID());
     gctx = GraphicsContext::GetRegistry().GetContent(ew->GetGraphicsContextID());
     input = Input::GetRegistry().GetContent(pw->GetInputID());
+
+    Shader* shader = Shader::Initialize(
+        gctx->GetID(),
+        "test",
+        {
+            .shader_vert = "files/shaders/rasterized/test_rs_vert.spv",
+            .shader_frag = "files/shaders/rasterized/test_rs_frag.spv"
+        });
+
+    if (!shader)
+    {
+        Log::Print("@@@@@ failed to init shader!");
+    }
 }
 
 void ElypsoEngine::Core::FixedUpdate()
@@ -78,7 +93,7 @@ void ElypsoEngine::Core::FixedUpdate()
 
 void ElypsoEngine::Core::Update()
 {
-    Log::Print("fps: " + GetFPS(0.5));
+    //Log::Print("fps: " + GetFPS(0.5));
 
     if (input->IsKeyPressed(KeyboardButton::K_1))
     {

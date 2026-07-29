@@ -3,10 +3,7 @@
 //This is free software, and you are welcome to redistribute it under certain conditions.
 //Read LICENSE.md for more information.
 
-#include <chrono>
-
 #include "log_utils.hpp"
-#include "key_standards.hpp"
 
 #include "core/ee_core.hpp"
 #include "graphics/ee_window.hpp"
@@ -20,7 +17,6 @@
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
-using KalaHeaders::KalaKeyStandards::KeyboardButton;
 
 using ElypsoEngine::Core::EngineCore;
 using ElypsoEngine::Core::AppConfig;
@@ -29,35 +25,15 @@ using KalaWindow::Graphics::ProcessWindow;
 using KalaWindow::Core::Input;
 using KalaWindow::Core::KalaWindowCore;
 using KalaGraphics::Core::GraphicsContext;
-using KalaGraphics::Core::VSyncState;
 using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
 using KalaGraphics::Resources::Transform;
 using KalaGraphics::Resources::Vertex;
 
 using std::string;
-using std::chrono::time_point;
-using std::chrono::steady_clock;
-using std::chrono::seconds;
-using std::chrono::duration;
-using std::format;
 
 Input* input{};
 GraphicsContext* gctx{};
-
-static string GetFPS(f64 secondsToWait)
-{
-    static f64 cachedFPS = EngineCore::GetCurrentFPS();
-    static time_point start = steady_clock::now();
-
-    if (steady_clock::now() - start > duration<f64>(secondsToWait))
-    {
-        cachedFPS = EngineCore::GetCurrentFPS();
-        start = steady_clock::now();
-    }
-    
-    return format("{:.2f}", cachedFPS);
-}
 
 extern const AppConfig ElypsoEngine::Core::appConfig = 
 {
@@ -67,7 +43,7 @@ extern const AppConfig ElypsoEngine::Core::appConfig =
 
 void ElypsoEngine::Core::Init()
 {
-    EngineWindow* ew = EngineWindow::GetRegistry().runtimeContent[0];
+    EngineWindow* ew = EngineWindow::GetRegistry().GetContent(0, false);
     ProcessWindow* pw = ProcessWindow::GetRegistry().GetContent(ew->GetWindowContextID());
     gctx = GraphicsContext::GetRegistry().GetContent(ew->GetGraphicsContextID());
     input = Input::GetRegistry().GetContent(pw->GetInputID());
@@ -86,8 +62,8 @@ void ElypsoEngine::Core::Init()
     if (!shader)
     {
         KalaWindowCore::ForceClose(
-            "metal metropolis error",
-            "failed to init shader!");
+            "Game core error",
+            "Failed to initialize shader 'shader-test'!");
     }
 
     Transform transform =
@@ -120,6 +96,7 @@ void ElypsoEngine::Core::Init()
     Mesh* mesh = Mesh::Initialize(
         "mesh-test",
         true,
+        gctx->GetID(),
         shader->GetID(),
         std::move(transform),
         std::move(testTriangle),
@@ -128,38 +105,17 @@ void ElypsoEngine::Core::Init()
     if (!mesh)
     {
         KalaWindowCore::ForceClose(
-            "metal metropolis error",
-            "failed to init mesh!");
+            "Game core error",
+            "Failed to initialize mesh 'mesh-test'!");
     }
 }
 
 void ElypsoEngine::Core::FixedUpdate()
 {
-    /*
-    Log::Print(
-        "This is a fixed update...",
-        "MM_MAIN",
-        LogType::LOG_DEBUG);
-    */
+
 }
 
 void ElypsoEngine::Core::Update()
 {
-    //Log::Print("fps: " + GetFPS(0.5));
 
-    if (input->IsKeyPressed(KeyboardButton::K_1))
-    {
-        Log::Print("@@@@@ set vsync state to off");
-        gctx->SetVSyncState(VSyncState::VSYNC_OFF);
-    }
-    if (input->IsKeyPressed(KeyboardButton::K_2))
-    {
-        Log::Print("@@@@@ set vsync state to adaptive");
-        gctx->SetVSyncState(VSyncState::VSYNC_ON_ADAPTIVE);
-    }
-    if (input->IsKeyPressed(KeyboardButton::K_3))
-    {
-        Log::Print("@@@@@ set vsync state to triple buffered");
-        gctx->SetVSyncState(VSyncState::VSYNC_ON_TRIPLE_BUFFERED);
-    }
 }

@@ -13,6 +13,9 @@
 #include "test/test_examples.hpp"
 #include "core/ee_core.hpp"
 #include "core/kg_context.hpp"
+#include "core/kw_core.hpp"
+#include "resources/kg_shader.hpp"
+#include "resources/kg_mesh.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -21,6 +24,9 @@ using KalaHeaders::KalaKeyStandards::KeyboardButton;
 
 using ElypsoEngine::Core::EngineCore;
 using KalaGraphics::Core::VSyncState;
+using KalaWindow::Core::KalaWindowCore;
+using KalaGraphics::Resources::Shader;
+using KalaGraphics::Resources::Mesh;
 
 using std::string;
 using std::format;
@@ -30,27 +36,25 @@ using std::chrono::seconds;
 using std::chrono::duration;
 using std::format;
 
-static string GetFPS(f64 secondsToWait)
-{
-    static f64 cachedFPS = EngineCore::GetCurrentFPS();
-    static time_point start = steady_clock::now();
-
-    if (steady_clock::now() - start > duration<f64>(secondsToWait))
-    {
-        cachedFPS = EngineCore::GetCurrentFPS();
-        start = steady_clock::now();
-    }
-    
-    return format("{:.2f}", cachedFPS);
-}
-
 namespace MetalMetropolis::Test
 {
-    //Log::Print("fps: " + GetFPS(0.5));
+    string Examples::GetFPS(f64 secondsToWait)
+    {
+        static f64 cachedFPS = EngineCore::GetCurrentFPS();
+        static time_point start = steady_clock::now();
 
-    void Example_Test_Input(
-        Input* input,
-        GraphicsContext* gctx)
+        if (steady_clock::now() - start > duration<f64>(secondsToWait))
+        {
+            cachedFPS = EngineCore::GetCurrentFPS();
+            start = steady_clock::now();
+        }
+        
+        return format("{:.2f}", cachedFPS);
+    }
+
+    void Examples::Test_Input(
+        GraphicsContext* gctx,
+        Input* input)
     {
         if (input->IsKeyPressed(KeyboardButton::K_1))
         {
@@ -66,6 +70,50 @@ namespace MetalMetropolis::Test
         {
             Log::Print("@@@@@ set vsync state to triple buffered");
             gctx->SetVSyncState(VSyncState::VSYNC_ON_TRIPLE_BUFFERED);
+        }
+    }
+
+    void Examples::Create_Triangle(
+        GraphicsContext* gctx,
+        Transform&& triangleTransform,
+        vector<Vertex>&& triangleVertices,
+        array<path, 2>&& triangleShaders)
+    {
+        //sync ids before generating shader
+        EngineCore::SyncID();
+
+        Shader* shader = Shader::Initialize(
+            gctx->GetID(),
+            "shader-test",
+            {
+                .shader_vert = triangleShaders[0],
+                .shader_frag = triangleShaders[1]
+            });
+
+        if (!shader)
+        {
+            KalaWindowCore::ForceClose(
+                "Game core error",
+                "Failed to initialize shader 'shader-test'!");
+        }
+
+        //sync ids before generating mesh
+        EngineCore::SyncID();
+
+        Mesh* mesh = Mesh::Initialize(
+            "mesh-test",
+            true,
+            gctx->GetID(),
+            shader->GetID(),
+            std::move(triangleTransform),
+            std::move(triangleVertices),
+            {});
+
+        if (!mesh)
+        {
+            KalaWindowCore::ForceClose(
+                "Game core error",
+                "Failed to initialize mesh 'mesh-test'!");
         }
     }
 }

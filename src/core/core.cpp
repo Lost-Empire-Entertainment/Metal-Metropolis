@@ -3,41 +3,41 @@
 //This is free software, and you are welcome to redistribute it under certain conditions.
 //Read LICENSE.md for more information.
 
+#include <array>
+#include <filesystem>
+
 #include "log_utils.hpp"
+
+#include "test/test_examples.hpp"
 
 #include "core/ee_core.hpp"
 #include "graphics/ee_window.hpp"
 #include "graphics/ee_scene.hpp"
 #include "graphics/kw_window.hpp"
 #include "core/kw_input.hpp"
-#include "core/kw_core.hpp"
 #include "core/kg_context.hpp"
-#include "resources/kg_shader.hpp"
-#include "resources/kg_mesh.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
 
-using ElypsoEngine::Core::EngineCore;
+using MetalMetropolis::Test::Examples;
+
 using ElypsoEngine::Core::AppConfig;
 using ElypsoEngine::Graphics::EngineWindow;
 using KalaWindow::Graphics::ProcessWindow;
 using KalaWindow::Core::Input;
-using KalaWindow::Core::KalaWindowCore;
 using KalaGraphics::Core::GraphicsContext;
-using KalaGraphics::Resources::Shader;
-using KalaGraphics::Resources::Mesh;
-using KalaGraphics::Resources::Transform;
-using KalaGraphics::Resources::Vertex;
 
 using std::string;
+using std::array;
+using std::filesystem::path;
 
-Input* input{};
 GraphicsContext* gctx{};
+Input* input{};
 
 extern const AppConfig ElypsoEngine::Core::appConfig = 
 {
-    .title = "Metal Metropolis Pre-Release 2",
+    .title = "Metal Metropolis Pre-Release 3",
     .pos = 600
 };
 
@@ -48,66 +48,32 @@ void ElypsoEngine::Core::Init()
     gctx = GraphicsContext::GetRegistry().GetContent(ew->GetGraphicsContextID());
     input = Input::GetRegistry().GetContent(pw->GetInputID());
 
-    //sync ids before generating shader
-    EngineCore::SyncID();
-
-    Shader* shader = Shader::Initialize(
-        gctx->GetID(),
-        "shader-test",
-        {
-            .shader_vert = "files/shaders/rasterized/test_rs_vert.spv",
-            .shader_frag = "files/shaders/rasterized/test_rs_frag.spv"
-        });
-
-    if (!shader)
-    {
-        KalaWindowCore::ForceClose(
-            "Game core error",
-            "Failed to initialize shader 'shader-test'!");
-    }
-
-    Transform transform =
-    {
-        .pos = { 1, 1, 0 },
-        .rot = {},
-        .size = { 1, 1, 0 }
-    };
-
     //TODO: fix Y axis in the future, right now its upside-down,
     //so test triangle is also rendered upside down,
     //make sure to put cull mode back to VK_CULL_MODE_BACK_BIT as well once fixed
 
-    vector<Vertex> testTriangle = 
-    {
-        //correct original
-        //{.pos = { -0.5f, -0.5f, 0.0f }, .normal = {}, .uv = { 0.0f, 0.0f }},
-        //{.pos = {  0.5f, -0.5f, 0.0f }, .normal = {}, .uv = { 1.0f, 0.0f }},
-        //{.pos = {  0.0f,  0.5f, 0.0f }, .normal = {}, .uv = { 0.5f, 1.0f }}
+    Examples::Create_Triangle(
+        gctx,
+        {
+            .pos = { 1, 1, 0 },
+            .rot = {},
+            .size = { 1, 1, 0 }
+        },
+        {
+            //correct original
+            //{.pos = { -0.5f, -0.5f, 0.0f }, .normal = {}, .uv = { 0.0f, 0.0f }},
+            //{.pos = {  0.5f, -0.5f, 0.0f }, .normal = {}, .uv = { 1.0f, 0.0f }},
+            //{.pos = {  0.0f,  0.5f, 0.0f }, .normal = {}, .uv = { 0.5f, 1.0f }}
 
-        //upside down
-        {.pos = { -0.5f,  0.5f, 0.0f }, .normal = {}, .uv = { 0.0f, 1.0f }},
-        {.pos = {  0.5f,  0.5f, 0.0f }, .normal = {}, .uv = { 1.0f, 1.0f }},
-        {.pos = {  0.0f, -0.5f, 0.0f }, .normal = {}, .uv = { 0.5f, 0.0f }}
-    };
-
-    //sync ids before generating mesh
-    EngineCore::SyncID();
-
-    Mesh* mesh = Mesh::Initialize(
-        "mesh-test",
-        true,
-        gctx->GetID(),
-        shader->GetID(),
-        std::move(transform),
-        std::move(testTriangle),
-        {});
-
-    if (!mesh)
-    {
-        KalaWindowCore::ForceClose(
-            "Game core error",
-            "Failed to initialize mesh 'mesh-test'!");
-    }
+            //upside down
+            {.pos = { -0.5f,  0.5f, 0.0f }, .normal = {}, .uv = { 0.0f, 1.0f }},
+            {.pos = {  0.5f,  0.5f, 0.0f }, .normal = {}, .uv = { 1.0f, 1.0f }},
+            {.pos = {  0.0f, -0.5f, 0.0f }, .normal = {}, .uv = { 0.5f, 0.0f }}
+        },
+        array<path, 2>{
+            "files/shaders/rasterized/test_rs_vert.spv",
+            "files/shaders/rasterized/test_rs_frag.spv"
+        });
 }
 
 void ElypsoEngine::Core::FixedUpdate()
@@ -117,5 +83,14 @@ void ElypsoEngine::Core::FixedUpdate()
 
 void ElypsoEngine::Core::Update()
 {
+    /*
+    Log::Print(
+        Examples::GetFPS(0.5f),
+        "GAME_CORE",
+        LogType::LOG_INFO);
 
+    Examples::Test_Input(
+        gctx,
+        input);
+    */
 }

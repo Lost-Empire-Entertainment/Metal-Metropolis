@@ -84,7 +84,6 @@ namespace MetalMetropolis::Test
 
         Shader* shader = Shader::Initialize(
             gctx->GetID(),
-            "shader-test",
             {
                 .shader_vert = triangleShaders[0],
                 .shader_frag = triangleShaders[1]
@@ -101,7 +100,6 @@ namespace MetalMetropolis::Test
         EngineCore::SyncID();
 
         Mesh* mesh = Mesh::Initialize(
-            "mesh-test",
             true,
             gctx->GetID(),
             shader->GetID(),

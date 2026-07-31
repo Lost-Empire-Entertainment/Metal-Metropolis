@@ -29,9 +29,11 @@ namespace MetalMetropolis::Test
     public:
         static string GetFPS(f64 secondsToWait);
 
-        static void Test_Input(
+        static void Test_VSync_Input(
             GraphicsContext* gctx,
             Input* input);
+
+        static void Test_System_Sound_Input(Input* input);
 
         static void Create_Triangle(
             GraphicsContext* gctx,

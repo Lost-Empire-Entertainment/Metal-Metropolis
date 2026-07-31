@@ -16,6 +16,7 @@
 #include "graphics/kw_window.hpp"
 #include "core/kw_input.hpp"
 #include "core/kg_context.hpp"
+#include "graphics/kw_window_global.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -27,6 +28,7 @@ using ElypsoEngine::Graphics::EngineWindow;
 using KalaWindow::Graphics::ProcessWindow;
 using KalaWindow::Core::Input;
 using KalaGraphics::Core::GraphicsContext;
+using KalaWindow::Graphics::Window_Global;
 
 using std::string;
 using std::array;
@@ -74,6 +76,10 @@ void ElypsoEngine::Core::Init()
             "files/shaders/rasterized/test_rs_vert.spv",
             "files/shaders/rasterized/test_rs_frag.spv"
         });
+
+    Window_Global::CreateNotification(
+        "Metal Metropolis",
+        "This is a notification test!");
 }
 
 void ElypsoEngine::Core::FixedUpdate()
@@ -89,8 +95,10 @@ void ElypsoEngine::Core::Update()
         "GAME_CORE",
         LogType::LOG_INFO);
 
-    Examples::Test_Input(
+    Examples::Test_VSync_Input(
         gctx,
         input);
     */
+
+    Examples::Test_System_Sound_Input(input);
 }

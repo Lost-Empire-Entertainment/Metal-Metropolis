@@ -16,6 +16,7 @@
 #include "core/kw_core.hpp"
 #include "resources/kg_shader.hpp"
 #include "resources/kg_mesh.hpp"
+#include "graphics/kw_window_global.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -27,6 +28,8 @@ using KalaGraphics::Core::VSyncState;
 using KalaWindow::Core::KalaWindowCore;
 using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
+using KalaWindow::Graphics::Window_Global;
+using KalaWindow::Graphics::SoundType;
 
 using std::string;
 using std::format;
@@ -52,7 +55,7 @@ namespace MetalMetropolis::Test
         return format("{:.2f}", cachedFPS);
     }
 
-    void Examples::Test_Input(
+    void Examples::Test_VSync_Input(
         GraphicsContext* gctx,
         Input* input)
     {
@@ -72,6 +75,21 @@ namespace MetalMetropolis::Test
             gctx->SetVSyncState(VSyncState::VSYNC_ON_TRIPLE_BUFFERED);
         }
     }
+
+    void Examples::Test_System_Sound_Input(Input* input)
+    {
+        if (input->IsKeyPressed(KeyboardButton::K_4))
+        {
+            Log::Print("@@@@@ played 'OK' sound");
+            Window_Global::PlaySystemSound(SoundType::SOUND_OK);
+        }
+        if (input->IsKeyPressed(KeyboardButton::K_5))
+        {
+            Log::Print("@@@@@ played 'ERROR' sound");
+            Window_Global::PlaySystemSound(SoundType::SOUND_ERROR);
+        }
+    }
+
 
     void Examples::Create_Triangle(
         GraphicsContext* gctx,

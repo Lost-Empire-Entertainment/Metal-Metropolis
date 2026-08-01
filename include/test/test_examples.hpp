@@ -9,12 +9,14 @@
 #include <string>
 
 #include "core/kw_input.hpp"
+#include "graphics/kw_window.hpp"
 #include "core/kg_context.hpp"
 #include "resources/kg_mesh.hpp"
 
 namespace MetalMetropolis::Test
 {
     using KalaWindow::Core::Input;
+    using KalaWindow::Graphics::ProcessWindow;
     using KalaGraphics::Core::GraphicsContext;
     using KalaGraphics::Resources::Transform;
     using KalaGraphics::Resources::Vertex;
@@ -29,11 +31,20 @@ namespace MetalMetropolis::Test
     public:
         static string GetFPS(f64 secondsToWait);
 
+        static void Test_Popup_And_File_Drag(ProcessWindow* pw);
+
         static void Test_VSync_Input(
             GraphicsContext* gctx,
             Input* input);
 
         static void Test_System_Sound_Input(Input* input);
+
+        static void Test_Create_Notification(Input* input);
+
+        static void Test_Get_Files(
+            Input *input,
+            vector<string>&& customTypes = {},
+            path&& requiredRoot = {});
 
         static void Create_Triangle(
             GraphicsContext* gctx,

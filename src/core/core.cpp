@@ -13,9 +13,10 @@
 #include "core/ee_core.hpp"
 #include "graphics/ee_window.hpp"
 #include "graphics/ee_scene.hpp"
+#include "core/kg_context.hpp"
 #include "graphics/kw_window.hpp"
 #include "core/kw_input.hpp"
-#include "core/kg_context.hpp"
+#include "core/kw_core.hpp"
 #include "graphics/kw_window_global.hpp"
 
 using KalaHeaders::KalaLog::Log;
@@ -26,16 +27,18 @@ using MetalMetropolis::Test::Examples;
 using ElypsoEngine::Core::AppConfig;
 using ElypsoEngine::Graphics::EngineWindow;
 using KalaWindow::Graphics::ProcessWindow;
-using KalaWindow::Core::Input;
 using KalaGraphics::Core::GraphicsContext;
+using KalaWindow::Core::Input;
+using KalaWindow::Core::KalaWindowCore;
 using KalaWindow::Graphics::Window_Global;
 
 using std::string;
 using std::array;
 using std::filesystem::path;
 
-GraphicsContext* gctx{};
-Input* input{};
+static GraphicsContext* gctx{};
+static Input* input{};
+static path exePath{};
 
 extern const AppConfig ElypsoEngine::Core::appConfig = 
 {
@@ -49,6 +52,10 @@ void ElypsoEngine::Core::Init()
     ProcessWindow* pw = ProcessWindow::GetRegistry().GetContent(ew->GetWindowContextID());
     gctx = GraphicsContext::GetRegistry().GetContent(ew->GetGraphicsContextID());
     input = Input::GetRegistry().GetContent(pw->GetInputID());
+
+    exePath = KalaWindowCore::GetExePath();
+
+    Examples::Test_Popup_And_File_Drag(pw);
 
     //TODO: fix Y axis in the future, right now its upside-down,
     //so test triangle is also rendered upside down,
@@ -76,10 +83,6 @@ void ElypsoEngine::Core::Init()
             "files/shaders/rasterized/test_rs_vert.spv",
             "files/shaders/rasterized/test_rs_frag.spv"
         });
-
-    Window_Global::CreateNotification(
-        "Metal Metropolis",
-        "This is a notification test!");
 }
 
 void ElypsoEngine::Core::FixedUpdate()
@@ -89,16 +92,30 @@ void ElypsoEngine::Core::FixedUpdate()
 
 void ElypsoEngine::Core::Update()
 {
-    /*
-    Log::Print(
-        Examples::GetFPS(0.5f),
-        "GAME_CORE",
-        LogType::LOG_INFO);
+    string fps = Examples::GetFPS(0.5f);
+    if (!fps.empty())
+    {
+        Log::Print(
+            "FPS: " + fps,
+            "GAME_CORE",
+            LogType::LOG_INFO);
+    }
 
     Examples::Test_VSync_Input(
         gctx,
         input);
-    */
+
+    Examples::Test_Create_Notification(input);
 
     Examples::Test_System_Sound_Input(input);
+
+    Examples::Test_Get_Files(
+        input,
+        { 
+            "*.spv",
+            "*.vert",
+            "*.frag",
+            "*.txt",
+            "*.md" },
+        path{exePath}.parent_path());
 }

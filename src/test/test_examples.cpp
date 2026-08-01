@@ -6,8 +6,11 @@
 #include <string>
 #include <format>
 #include <chrono>
+#include <vector>
+#include <filesystem>
 
 #include "log_utils.hpp"
+#include "math_utils.hpp"
 #include "key_standards.hpp"
 
 #include "test/test_examples.hpp"
@@ -21,6 +24,8 @@
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
 
+using KalaHeaders::KalaMath::vec2;
+
 using KalaHeaders::KalaKeyStandards::KeyboardButton;
 
 using ElypsoEngine::Core::EngineCore;
@@ -30,19 +35,29 @@ using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
 using KalaWindow::Graphics::Window_Global;
 using KalaWindow::Graphics::SoundType;
+using KalaWindow::Graphics::FileType;
+using KalaWindow::Graphics::PopupAction;
+using KalaWindow::Graphics::PopupType;
 
 using std::string;
+using std::to_string;
 using std::format;
 using std::chrono::time_point;
 using std::chrono::steady_clock;
 using std::chrono::seconds;
 using std::chrono::duration;
 using std::format;
+using std::vector;
+using std::filesystem::path;
+
+static bool fpsState{};
 
 namespace MetalMetropolis::Test
 {
     string Examples::GetFPS(f64 secondsToWait)
     {
+        if (!fpsState) return "";
+
         static f64 cachedFPS = EngineCore::GetCurrentFPS();
         static time_point start = steady_clock::now();
 
@@ -53,6 +68,42 @@ namespace MetalMetropolis::Test
         }
         
         return format("{:.2f}", cachedFPS);
+    }
+
+    void Examples::Test_Popup_And_File_Drag(ProcessWindow* pw)
+    {
+        pw->SetDraggedFilesCallback([](const vector<path>& files, vec2 pos)
+            {
+                if (files.empty())
+                {
+                    Window_Global::CreatePopup(
+                        "File drag result popup",
+                        "This popup confirms that no files were dragged on screen!",
+                        PopupAction::POPUP_ACTION_OK,
+                        PopupType::POPUP_TYPE_WARNING);
+                }
+                else
+                {
+                    string filesString{};
+                    for (const path& f : files)
+                    {
+                        filesString += f.string() + ", ";
+                    }
+                    filesString.pop_back();
+                    filesString.pop_back();
+
+                    string posString = 
+                        to_string((i32)pos.x) + ", " 
+                        + to_string((i32)pos.y);
+
+                    Window_Global::CreatePopup(
+                        "File drag result popup",
+                        "This popup confirms that files '" + filesString 
+                        + "' were dragged on screen at pos '" + posString + "'!",
+                        PopupAction::POPUP_ACTION_OK,
+                        PopupType::POPUP_TYPE_INFO);
+                }
+            });
     }
 
     void Examples::Test_VSync_Input(
@@ -74,22 +125,101 @@ namespace MetalMetropolis::Test
             Log::Print("@@@@@ set vsync state to triple buffered");
             gctx->SetVSyncState(VSyncState::VSYNC_ON_TRIPLE_BUFFERED);
         }
+
+        if (input->IsKeyPressed(KeyboardButton::K_4))
+        {
+            fpsState = !fpsState;
+            string fpsStateValue = fpsState ? "on" : "off";
+
+            Log::Print("@@@@@ set fps state to '" + fpsStateValue + "'");
+        }
     }
 
     void Examples::Test_System_Sound_Input(Input* input)
     {
-        if (input->IsKeyPressed(KeyboardButton::K_4))
+        if (input->IsKeyPressed(KeyboardButton::K_5))
         {
             Log::Print("@@@@@ played 'OK' sound");
             Window_Global::PlaySystemSound(SoundType::SOUND_OK);
         }
-        if (input->IsKeyPressed(KeyboardButton::K_5))
+        if (input->IsKeyPressed(KeyboardButton::K_6))
         {
             Log::Print("@@@@@ played 'ERROR' sound");
             Window_Global::PlaySystemSound(SoundType::SOUND_ERROR);
         }
     }
 
+    void Examples::Test_Create_Notification(Input* input)
+    {
+        if (input->IsKeyPressed(KeyboardButton::K_7))
+        {
+            Log::Print("@@@@@ created notification");
+            Window_Global::CreateNotification(
+                "Metal Metropolis",
+                "This is a notification test!");
+        }
+    }
+
+    void Examples::Test_Get_Files(
+        Input *input,
+        vector<string>&& types,
+        path&& requiredRoot)
+    {
+        if (input->IsKeyPressed(KeyboardButton::K_8))
+        {
+            Log::Print("@@@@@ opened file explorer with options 'single file, any'");
+            vector<path> result = Window_Global::GetFiles(FileType::FILE_ANY);
+
+            if (!result.empty()) Log::Print("@@@@@ retrieved file: " + result[0].string());
+            else Log::Print("@@@@@ no file was retreived");
+        }
+        if (input->IsKeyPressed(KeyboardButton::K_9))
+        {
+            Log::Print("@@@@@ opened file explorer with options 'multiple files, folders'");
+            vector<path> result = Window_Global::GetFiles(
+                FileType::FILE_FOLDER,
+                {},
+                {},
+                true);
+
+            if (!result.empty())
+            {
+                string resultAll{};
+                for (const auto& r : result)
+                {
+                    resultAll += r.string() + ", ";
+                }
+                resultAll.pop_back();
+                resultAll.pop_back();
+
+                Log::Print("@@@@@ retrieved folders: " + resultAll);
+            }
+            else Log::Print("@@@@@ no folders were retreived");
+        }
+        if (input->IsKeyPressed(KeyboardButton::K_0))
+        {
+            Log::Print("@@@@@ opened file explorer with options 'multiple files, custom, requiredRoot'");
+            vector<path> result = Window_Global::GetFiles(
+                FileType::FILE_CUSTOM,
+                std::move(types),
+                std::move(requiredRoot),
+                true);
+
+            if (!result.empty())
+            {
+                string resultAll{};
+                for (const auto& r : result)
+                {
+                    resultAll += r.string() + ", ";
+                }
+                resultAll.pop_back();
+                resultAll.pop_back();
+
+                Log::Print("@@@@@ retrieved custom files: " + resultAll);
+            }
+            else Log::Print("@@@@@ no custom files were retreived");
+        }
+    }
 
     void Examples::Create_Triangle(
         GraphicsContext* gctx,

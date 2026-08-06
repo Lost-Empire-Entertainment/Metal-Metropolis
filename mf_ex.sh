@@ -65,6 +65,9 @@ fi
 
 mf --f "${EXE_ORIGIN}/${EXE_NAME}${EXE_EXT}" --t "${OUT_DIR}/${EXE_NAME}${EXE_EXT}"
 
+# Copy files
+mf --f "files" --t "${OUT_DIR}"
+
 # Copy windows-gnu dlls
 case "$1" in
     --windows-gnu)

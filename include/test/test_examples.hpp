@@ -46,6 +46,10 @@ namespace MetalMetropolis::Test
             vector<string>&& customTypes = {},
             path&& requiredRoot = {});
 
+        static void Test_Window_Toggles(
+            ProcessWindow* pw,
+            Input* input);
+
         static void Create_Triangle(
             GraphicsContext* gctx,
             Transform&& triangleTransform,

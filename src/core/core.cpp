@@ -17,7 +17,6 @@
 #include "graphics/kw_window.hpp"
 #include "core/kw_input.hpp"
 #include "core/kw_core.hpp"
-#include "graphics/kw_window_global.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -30,13 +29,13 @@ using KalaWindow::Graphics::ProcessWindow;
 using KalaGraphics::Core::GraphicsContext;
 using KalaWindow::Core::Input;
 using KalaWindow::Core::KalaWindowCore;
-using KalaWindow::Graphics::Window_Global;
 
 using std::string;
 using std::array;
 using std::filesystem::path;
 
 static GraphicsContext* gctx{};
+static ProcessWindow* pw{};
 static Input* input{};
 static path exePath{};
 
@@ -49,7 +48,7 @@ extern const AppConfig ElypsoEngine::Core::appConfig =
 void ElypsoEngine::Core::Init()
 {
     EngineWindow* ew = EngineWindow::GetRegistry().GetContent(0, false);
-    ProcessWindow* pw = ProcessWindow::GetRegistry().GetContent(ew->GetWindowContextID());
+    pw = ProcessWindow::GetRegistry().GetContent(ew->GetWindowContextID());
     gctx = GraphicsContext::GetRegistry().GetContent(ew->GetGraphicsContextID());
     input = Input::GetRegistry().GetContent(pw->GetInputID());
 
@@ -85,6 +84,11 @@ void ElypsoEngine::Core::Init()
         });
 }
 
+void ElypsoEngine::Core::EarlyUpdate()
+{
+
+}
+
 void ElypsoEngine::Core::FixedUpdate()
 {
 
@@ -118,4 +122,13 @@ void ElypsoEngine::Core::Update()
             "*.txt",
             "*.md" },
         path{exePath}.parent_path());
+
+    Examples::Test_Window_Toggles(
+        pw,
+        input);
+}
+
+void ElypsoEngine::Core::LateUpdate()
+{
+    
 }

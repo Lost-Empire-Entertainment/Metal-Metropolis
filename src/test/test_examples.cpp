@@ -24,7 +24,14 @@
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
 
+using KalaHeaders::KalaMath::Transform3D;
 using KalaHeaders::KalaMath::vec2;
+using KalaHeaders::KalaMath::setpos3d;
+using KalaHeaders::KalaMath::setroteuler;
+using KalaHeaders::KalaMath::setsize3d;
+using KalaHeaders::KalaMath::PosTarget;
+using KalaHeaders::KalaMath::RotTarget;
+using KalaHeaders::KalaMath::SizeTarget;
 
 using KalaHeaders::KalaKeyStandards::KeyboardButton;
 
@@ -38,6 +45,8 @@ using KalaWindow::Graphics::SoundType;
 using KalaWindow::Graphics::FileType;
 using KalaWindow::Graphics::PopupAction;
 using KalaWindow::Graphics::PopupType;
+using KalaWindow::Graphics::WindowMode;
+using KalaWindow::Core::InputCode;
 
 using std::string;
 using std::to_string;
@@ -51,6 +60,71 @@ using std::vector;
 using std::filesystem::path;
 
 static bool fpsState{};
+
+static constexpr InputCode combo_vsync_disable[] =
+{
+    { .kb = KeyboardButton::K_Z },
+    { .kb = KeyboardButton::K_1 }
+};
+static constexpr InputCode combo_vsync_adaptive[] =
+{
+    { .kb = KeyboardButton::K_Z },
+    { .kb = KeyboardButton::K_2 }
+};
+static constexpr InputCode combo_vsync_triple_buffered[] =
+{
+    { .kb = KeyboardButton::K_Z },
+    { .kb = KeyboardButton::K_3 }
+};
+static constexpr InputCode combo_toggle_fps[] =
+{
+    { .kb = KeyboardButton::K_Z },
+    { .kb = KeyboardButton::K_4 }
+};
+
+static constexpr InputCode combo_sound_ok[] =
+{
+    { .kb = KeyboardButton::K_X },
+    { .kb = KeyboardButton::K_1 }
+};
+static constexpr InputCode combo_sound_error[] =
+{
+    { .kb = KeyboardButton::K_X },
+    { .kb = KeyboardButton::K_2 }
+};
+
+static constexpr InputCode combo_notification[] =
+{
+    { .kb = KeyboardButton::K_C },
+    { .kb = KeyboardButton::K_1 }
+};
+
+static constexpr InputCode combo_files_any_one[] =
+{
+    { .kb = KeyboardButton::K_V },
+    { .kb = KeyboardButton::K_1 }
+};
+static constexpr InputCode combo_files_dir_mult[] =
+{
+    { .kb = KeyboardButton::K_V },
+    { .kb = KeyboardButton::K_2 }
+};
+static constexpr InputCode combo_files_selected_mult[] =
+{
+    { .kb = KeyboardButton::K_V },
+    { .kb = KeyboardButton::K_3 }
+};
+
+static constexpr InputCode combo_toggle_full_screen[] =
+{
+    { .kb = KeyboardButton::K_B },
+    { .kb = KeyboardButton::K_1 }
+};
+static constexpr InputCode combo_toggle_resizable[] =
+{
+    { .kb = KeyboardButton::K_B },
+    { .kb = KeyboardButton::K_2 }
+};
 
 namespace MetalMetropolis::Test
 {
@@ -110,23 +184,23 @@ namespace MetalMetropolis::Test
         GraphicsContext* gctx,
         Input* input)
     {
-        if (input->IsKeyPressed(KeyboardButton::K_1))
+        if (input->IsComboPressed(combo_vsync_disable))
         {
             Log::Print("@@@@@ set vsync state to off");
             gctx->SetVSyncState(VSyncState::VSYNC_OFF);
         }
-        if (input->IsKeyPressed(KeyboardButton::K_2))
+        else if (input->IsComboPressed(combo_vsync_adaptive))
         {
             Log::Print("@@@@@ set vsync state to adaptive");
             gctx->SetVSyncState(VSyncState::VSYNC_ON_ADAPTIVE);
         }
-        if (input->IsKeyPressed(KeyboardButton::K_3))
+        else if (input->IsComboPressed(combo_vsync_triple_buffered))
         {
             Log::Print("@@@@@ set vsync state to triple buffered");
             gctx->SetVSyncState(VSyncState::VSYNC_ON_TRIPLE_BUFFERED);
         }
 
-        if (input->IsKeyPressed(KeyboardButton::K_4))
+        if (input->IsComboPressed(combo_toggle_fps))
         {
             fpsState = !fpsState;
             string fpsStateValue = fpsState ? "on" : "off";
@@ -137,12 +211,12 @@ namespace MetalMetropolis::Test
 
     void Examples::Test_System_Sound_Input(Input* input)
     {
-        if (input->IsKeyPressed(KeyboardButton::K_5))
+        if (input->IsComboPressed(combo_sound_ok))
         {
             Log::Print("@@@@@ played 'OK' sound");
             Window_Global::PlaySystemSound(SoundType::SOUND_OK);
         }
-        if (input->IsKeyPressed(KeyboardButton::K_6))
+        else if (input->IsComboPressed(combo_sound_error))
         {
             Log::Print("@@@@@ played 'ERROR' sound");
             Window_Global::PlaySystemSound(SoundType::SOUND_ERROR);
@@ -151,7 +225,7 @@ namespace MetalMetropolis::Test
 
     void Examples::Test_Create_Notification(Input* input)
     {
-        if (input->IsKeyPressed(KeyboardButton::K_7))
+        if (input->IsComboPressed(combo_notification))
         {
             Log::Print("@@@@@ created notification");
             Window_Global::CreateNotification(
@@ -165,7 +239,7 @@ namespace MetalMetropolis::Test
         vector<string>&& types,
         path&& requiredRoot)
     {
-        if (input->IsKeyPressed(KeyboardButton::K_8))
+        if (input->IsComboPressed(combo_files_any_one))
         {
             Log::Print("@@@@@ opened file explorer with options 'single file, any'");
             vector<path> result = Window_Global::GetFiles(FileType::FILE_ANY);
@@ -173,7 +247,7 @@ namespace MetalMetropolis::Test
             if (!result.empty()) Log::Print("@@@@@ retrieved file: " + result[0].string());
             else Log::Print("@@@@@ no file was retreived");
         }
-        if (input->IsKeyPressed(KeyboardButton::K_9))
+        else if (input->IsComboPressed(combo_files_dir_mult))
         {
             Log::Print("@@@@@ opened file explorer with options 'multiple files, folders'");
             vector<path> result = Window_Global::GetFiles(
@@ -196,7 +270,7 @@ namespace MetalMetropolis::Test
             }
             else Log::Print("@@@@@ no folders were retreived");
         }
-        if (input->IsKeyPressed(KeyboardButton::K_0))
+        else if (input->IsComboPressed(combo_files_selected_mult))
         {
             Log::Print("@@@@@ opened file explorer with options 'multiple files, custom, requiredRoot'");
             vector<path> result = Window_Global::GetFiles(
@@ -221,6 +295,33 @@ namespace MetalMetropolis::Test
         }
     }
 
+    void Examples::Test_Window_Toggles(
+        ProcessWindow *pw,
+        Input *input)
+    {
+        if (input->IsComboPressed(combo_toggle_full_screen))
+        {
+            bool isFullscreen = pw->GetWindowMode() == WindowMode::WINDOWMODE_BORDERLESS;
+            bool desired = !isFullscreen;
+
+            pw->SetWindowMode(desired 
+                ? WindowMode::WINDOWMODE_BORDERLESS
+                : WindowMode::WINDOWMODE_WINDOWED);
+
+            Log::Print("@@@@@ set fullscreen state to: " 
+                + string(desired ? "on" : "off"));
+        }
+
+        else if (input->IsComboPressed(combo_toggle_resizable))
+        {
+            bool desired = !pw->IsResizable();
+            pw->SetResizableState(desired);
+
+            Log::Print("@@@@@ set resizable state to: " 
+                + string(desired ? "on" : "off"));
+        }
+    }
+
     void Examples::Create_Triangle(
         GraphicsContext* gctx,
         Transform&& triangleTransform,
@@ -230,13 +331,7 @@ namespace MetalMetropolis::Test
         //sync ids before generating shader
         EngineCore::SyncID();
 
-        Shader* shader = Shader::Initialize(
-            gctx->GetID(),
-            {
-                .shader_vert = triangleShaders[0],
-                .shader_frag = triangleShaders[1]
-            });
-
+        Shader* shader = Shader::Initialize(gctx->GetID());
         if (!shader)
         {
             KalaWindowCore::ForceClose(
@@ -244,22 +339,41 @@ namespace MetalMetropolis::Test
                 "Failed to initialize shader 'shader-test'!");
         }
 
+        shader->SetShaderData(
+            {
+                .shader_vert = triangleShaders[0],
+                .shader_frag = triangleShaders[1]
+            });
+
         //sync ids before generating mesh
         EngineCore::SyncID();
 
-        Mesh* mesh = Mesh::Initialize(
-            true,
-            gctx->GetID(),
-            shader->GetID(),
-            std::move(triangleTransform),
-            std::move(triangleVertices),
-            {});
-
+        Mesh* mesh = Mesh::Initialize(shader->GetID());
         if (!mesh)
         {
             KalaWindowCore::ForceClose(
                 "Game core error",
                 "Failed to initialize mesh 'mesh-test'!");
         }
+
+        mesh->GetVertices() = std::move(triangleVertices);
+
+        Transform3D meshTransform = mesh->GetTransform();
+
+        setpos3d(
+            meshTransform,
+            {},
+            PosTarget::POS_WORLD,
+            triangleTransform.pos);
+        setroteuler(
+            meshTransform,
+            {}, 
+            RotTarget::ROT_WORLD,
+            triangleTransform.rot);
+        setsize3d(
+            meshTransform,
+            {},
+            SizeTarget::SIZE_WORLD,
+            triangleTransform.size);
     }
 }

@@ -20,13 +20,14 @@
 #include "graphics/kw_window_global.hpp"
 #include "resources/kg_shader.hpp"
 #include "resources/kg_mesh.hpp"
-#include "resources/kg_camera.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
 
 using KalaHeaders::KalaMath::Transform3D;
 using KalaHeaders::KalaMath::vec2;
+using KalaHeaders::KalaMath::vec3;
+using KalaHeaders::KalaMath::toeuler3;
 using KalaHeaders::KalaMath::setpos3d;
 using KalaHeaders::KalaMath::setroteuler;
 using KalaHeaders::KalaMath::setsize3d;
@@ -48,8 +49,6 @@ using KalaWindow::Core::InputCode;
 using KalaGraphics::Core::VSyncState;
 using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
-using KalaGraphics::Resources::Camera;
-using KalaGraphics::Resources::CameraType;
 
 using std::string;
 using std::to_string;
@@ -63,6 +62,7 @@ using std::vector;
 using std::filesystem::path;
 
 static bool fpsState{};
+static bool isCameraMovable{};
 
 static constexpr InputCode combo_vsync_disable[] =
 {
@@ -129,9 +129,15 @@ static constexpr InputCode combo_toggle_resizable[] =
     { .kb = KeyboardButton::K_2 }
 };
 
+static constexpr InputCode combo_toggle_cam_move[] =
+{
+    { .kb = KeyboardButton::K_N },
+    { .kb = KeyboardButton::K_1 }
+};
+
 namespace MetalMetropolis::Test
 {
-    string Examples::GetFPS(f64 secondsToWait)
+    string Examples::Test_Get_FPS(f64 secondsToWait)
     {
         if (!fpsState) return "";
 
@@ -325,11 +331,95 @@ namespace MetalMetropolis::Test
         }
     }
 
-    void Examples::Create_Triangle(
-        GraphicsContext* gctx,
-        Transform&& triangleTransform,
-        vector<Vertex>&& triangleVertices,
-        array<path, 2>&& triangleShaders)
+    void Examples::Test_Camera_Toggle(Input *input)
+    {
+        if (input->IsComboPressed(combo_toggle_cam_move))
+        {
+            isCameraMovable = !isCameraMovable;
+
+            if (!isCameraMovable)
+            {
+                input->SetMouseLockState(false);
+                input->SetMouseVisibility(true);
+            }
+            else
+            {
+                input->SetMouseLockState(true);
+                input->SetMouseVisibility(false);
+            }
+
+            Log::Print("@@@@@ set cam move state to: " 
+                + string(isCameraMovable ? "on" : "off"));
+        }
+    }
+
+    void Examples::Test_Camera_Move(
+        Input* input,
+        Camera *cam,
+        f32 deltaTime)
+    {
+        static f32 sprintMultiplier = 2.0f;
+
+        if (!isCameraMovable) return;
+
+        vec2 mouse = input->GetRawMouseDelta();
+        vec2 kb{};
+        f32 vertical{};
+
+        //forwards
+        if (input->IsKeyHeld(KeyboardButton::K_W)) kb.y += 1.0f;
+        //backwards
+        if (input->IsKeyHeld(KeyboardButton::K_S)) kb.y -= 1.0f;
+        //left
+        if (input->IsKeyHeld(KeyboardButton::K_A)) kb.x -= 1.0f;
+        //right
+        if (input->IsKeyHeld(KeyboardButton::K_D)) kb.x += 1.0f;
+
+        //up
+        if (input->IsKeyHeld(KeyboardButton::K_E)) vertical += 1.0f;
+        //down
+        if (input->IsKeyHeld(KeyboardButton::K_Q)) vertical -= 1.0f;
+
+        //sprint
+        if (input->IsKeyHeld(KeyboardButton::K_LEFT_SHIFT)) deltaTime *= sprintMultiplier;
+
+        /*
+        string moveStr = "\nmouse - x: " 
+            + to_string(mouse.x) + ", y: "
+            + to_string(mouse.y) + "\nkb - x: "
+            + to_string(kb.x) + ", y: "
+            + to_string(kb.y);
+
+        Transform3D& ct = cam->GetTransform();
+        vec3 euler = toeuler3(ct.rot_world);
+
+        string transformStr = "\npos - x: "
+            + to_string(ct.pos_world.x) + ", y: "
+            + to_string(ct.pos_world.y) + ", z: "
+            + to_string(ct.pos_world.z) + ", \nrot - x: "
+            + to_string(euler.x) + ", y: "
+            + to_string(euler.y) + ", z: "
+            + to_string(euler.z) + ", \nsize - x: "
+            + to_string(ct.size_world.x) + ", y: "
+            + to_string(ct.size_world.y) + ", z: "
+            + to_string(ct.size_world.z);
+
+        Log::Print(
+            moveStr + transformStr,
+            "GAME_CAM_MOVE_TEST",
+            LogType::LOG_VERBOSE);
+        */
+
+        cam->Move(
+            mouse,
+            kb,
+            vertical,
+            deltaTime);
+    }
+
+    Shader* Examples::Test_Create_Shader(
+        GraphicsContext *gctx,
+        array<path, 2>&& shaderFiles)
     {
         //sync ids before generating shader
         EngineCore::SyncID();
@@ -339,15 +429,24 @@ namespace MetalMetropolis::Test
         {
             KalaWindowCore::ForceClose(
                 "Game core error",
-                "Failed to initialize shader 'shader-test'!");
+                "Failed to initialize test shader!");
         }
 
         shader->SetShaderData(
             {
-                .shader_vert = triangleShaders[0],
-                .shader_frag = triangleShaders[1]
+                .shader_vert = shaderFiles[0],
+                .shader_frag = shaderFiles[1]
             });
 
+        return shader;
+    }
+
+    Mesh* Examples::Test_Create_Mesh(
+        Shader* shader,
+        Transform&& transform,
+        vector<Vertex>&& vertices,
+        vector<u32>&& indices)
+    {
         //sync ids before generating mesh
         EngineCore::SyncID();
 
@@ -356,32 +455,65 @@ namespace MetalMetropolis::Test
         {
             KalaWindowCore::ForceClose(
                 "Game core error",
-                "Failed to initialize mesh 'mesh-test'!");
+                "Failed to initialize test mesh!");
         }
 
-        mesh->GetVertices() = std::move(triangleVertices);
+        mesh->GetVertices() = std::move(vertices);
+        mesh->GetIndices() = std::move(indices);
 
-        Transform3D meshTransform = mesh->GetTransform();
+        Transform3D& meshTransform = mesh->GetTransform();
 
         setpos3d(
             meshTransform,
             {},
             PosTarget::POS_WORLD,
-            triangleTransform.pos);
+            transform.pos);
         setroteuler(
             meshTransform,
             {}, 
             RotTarget::ROT_WORLD,
-            triangleTransform.rot);
+            transform.rot);
         setsize3d(
             meshTransform,
             {},
             SizeTarget::SIZE_WORLD,
-            triangleTransform.size);
+            transform.size);
+
+        mesh->UpdateMeshData();
+
+        return mesh;
+    }
+
+    Camera* Examples::Test_Create_Camera(
+        GraphicsContext *gctx,
+        Shader *shader,
+        Transform&& transform)
+    {
+        //sync ids before generating camera
+        EngineCore::SyncID();
 
         Camera* cam = Camera::Initialize(
             gctx->GetID(),
             shader->GetID());
-        cam->SetCameraType(CameraType::C_ORTHOGRAPHIC);
+        if (!cam)
+        {
+            KalaWindowCore::ForceClose(
+                "Game core error",
+                "Failed to initialize test camera!");
+        }
+
+        if (transform.pos != 0
+            && transform.rot != 0
+            && transform.size != 0)
+        {
+            Transform3D& ct = cam->GetTransform();
+            ct.pos_world = transform.pos;
+            ct.rot_world = toquat(transform.rot);
+            ct.size_world = transform.size;
+
+            cam->Move({}, {});
+        }
+
+        return cam;
     }
 }

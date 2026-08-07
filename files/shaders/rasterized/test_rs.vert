@@ -6,9 +6,9 @@ layout(location = 2) in vec2 inUV;
 
 layout(push_constant) uniform TestData
 {
-    layout(offset = 0)  mat4 modelMatrix;
-    layout(offset = 64) vec4 color;
-    layout(offset = 80) uint debugMode;
+    layout(offset = 0, row_major) mat4 modelMatrix;
+    layout(offset = 64)           vec4 color;
+    layout(offset = 80)           uint debugMode;
 } testData;
 
 layout(set = 0, binding = 0) uniform CameraUBO

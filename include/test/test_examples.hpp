@@ -11,15 +11,20 @@
 #include "core/kw_input.hpp"
 #include "graphics/kw_window.hpp"
 #include "core/kg_context.hpp"
+#include "resources/kg_shader.hpp"
 #include "resources/kg_mesh.hpp"
+#include "resources/kg_camera.hpp"
 
 namespace MetalMetropolis::Test
 {
     using KalaWindow::Core::Input;
     using KalaWindow::Graphics::ProcessWindow;
     using KalaGraphics::Core::GraphicsContext;
+    using KalaGraphics::Resources::Shader;
+    using KalaGraphics::Resources::Mesh;
     using KalaGraphics::Resources::Transform;
     using KalaGraphics::Resources::Vertex;
+    using KalaGraphics::Resources::Camera;
 
     using std::array;
     using std::vector;
@@ -29,7 +34,7 @@ namespace MetalMetropolis::Test
     class Examples
     {
     public:
-        static string GetFPS(f64 secondsToWait);
+        static string Test_Get_FPS(f64 secondsToWait);
 
         static void Test_Popup_And_File_Drag(ProcessWindow* pw);
 
@@ -50,10 +55,26 @@ namespace MetalMetropolis::Test
             ProcessWindow* pw,
             Input* input);
 
-        static void Create_Triangle(
+        static void Test_Camera_Toggle(Input* input);
+
+        static void Test_Camera_Move(
+            Input* input,
+            Camera* cam,
+            f32 deltaTime);
+
+        static Shader* Test_Create_Shader(
             GraphicsContext* gctx,
-            Transform&& triangleTransform,
-            vector<Vertex>&& triangleVertices,
-            array<path, 2>&& triangleShaders);  
+            array<path, 2>&& shaderFiles);
+
+        static Mesh* Test_Create_Mesh(
+            Shader* shader,
+            Transform&& transform = {},
+            vector<Vertex>&& vertices = {},
+            vector<u32>&& indices = {}); 
+
+        static Camera* Test_Create_Camera(
+            GraphicsContext* gctx,
+            Shader* shader,
+            Transform&& transform = {});
     };
 }

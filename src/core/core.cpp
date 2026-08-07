@@ -13,10 +13,13 @@
 #include "core/ee_core.hpp"
 #include "graphics/ee_window.hpp"
 #include "graphics/ee_scene.hpp"
-#include "core/kg_context.hpp"
 #include "graphics/kw_window.hpp"
 #include "core/kw_input.hpp"
 #include "core/kw_core.hpp"
+#include "core/kg_context.hpp"
+#include "resources/kg_shader.hpp"
+#include "resources/kg_mesh.hpp"
+#include "resources/kg_camera.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -26,9 +29,13 @@ using MetalMetropolis::Test::Examples;
 using ElypsoEngine::Core::AppConfig;
 using ElypsoEngine::Graphics::EngineWindow;
 using KalaWindow::Graphics::ProcessWindow;
-using KalaGraphics::Core::GraphicsContext;
 using KalaWindow::Core::Input;
 using KalaWindow::Core::KalaWindowCore;
+using KalaGraphics::Core::GraphicsContext;
+using KalaGraphics::Resources::Vertex;
+using KalaGraphics::Resources::Shader;
+using KalaGraphics::Resources::Mesh;
+using KalaGraphics::Resources::Camera;
 
 using std::string;
 using std::array;
@@ -37,6 +44,11 @@ using std::filesystem::path;
 static GraphicsContext* gctx{};
 static ProcessWindow* pw{};
 static Input* input{};
+
+static Shader* shader{};
+static Mesh* mesh{};
+static Camera* cam{};
+
 static path exePath{};
 
 extern const AppConfig ElypsoEngine::Core::appConfig = 
@@ -49,6 +61,8 @@ void ElypsoEngine::Core::Init()
 {
     EngineWindow* ew = EngineWindow::GetRegistry().GetContent(0, false);
     pw = ProcessWindow::GetRegistry().GetContent(ew->GetWindowContextID());
+    pw->SetMinSize({800, 600});
+
     gctx = GraphicsContext::GetRegistry().GetContent(ew->GetGraphicsContextID());
     input = Input::GetRegistry().GetContent(pw->GetInputID());
 
@@ -56,32 +70,77 @@ void ElypsoEngine::Core::Init()
 
     Examples::Test_Popup_And_File_Drag(pw);
 
-    //TODO: fix Y axis in the future, right now its upside-down,
-    //so test triangle is also rendered upside down,
-    //make sure to put cull mode back to VK_CULL_MODE_BACK_BIT as well once fixed
-
-    Examples::Create_Triangle(
+    shader = Examples::Test_Create_Shader(
         gctx,
-        {
-            .pos = { 1, 1, 0 },
-            .rot = {},
-            .size = { 1000, 1000, 0 }
-        },
-        {
-            //correct original
-            //{.pos = { -0.5f, -0.5f, 0.0f }, .normal = {}, .uv = { 0.0f, 0.0f }},
-            //{.pos = {  0.5f, -0.5f, 0.0f }, .normal = {}, .uv = { 1.0f, 0.0f }},
-            //{.pos = {  0.0f,  0.5f, 0.0f }, .normal = {}, .uv = { 0.5f, 1.0f }}
-
-            //upside down
-            {.pos = { -0.5f,  0.5f, 0.0f }, .normal = {}, .uv = { 0.0f, 1.0f }},
-            {.pos = {  0.5f,  0.5f, 0.0f }, .normal = {}, .uv = { 1.0f, 1.0f }},
-            {.pos = {  0.0f, -0.5f, 0.0f }, .normal = {}, .uv = { 0.5f, 0.0f }}
-        },
         array<path, 2>{
             "files/shaders/rasterized/test_rs_vert.spv",
             "files/shaders/rasterized/test_rs_frag.spv"
         });
+
+    vector<Vertex> vertices =
+    {
+        //front (+Z)
+        {.pos = { -1.0f, -1.0f,  1.0f }, .normal = { 0.0f, 0.0f, 1.0f }, .uv = { 0.0f, 0.0f }},
+        {.pos = {  1.0f, -1.0f,  1.0f }, .normal = { 0.0f, 0.0f, 1.0f }, .uv = { 1.0f, 0.0f }},
+        {.pos = {  1.0f,  1.0f,  1.0f }, .normal = { 0.0f, 0.0f, 1.0f }, .uv = { 1.0f, 1.0f }},
+        {.pos = { -1.0f,  1.0f,  1.0f }, .normal = { 0.0f, 0.0f, 1.0f }, .uv = { 0.0f, 1.0f }},
+
+        //back (-Z)
+        {.pos = {  1.0f, -1.0f, -1.0f }, .normal = { 0.0f, 0.0f, -1.0f }, .uv = { 0.0f, 0.0f }},
+        {.pos = { -1.0f, -1.0f, -1.0f }, .normal = { 0.0f, 0.0f, -1.0f }, .uv = { 1.0f, 0.0f }},
+        {.pos = { -1.0f,  1.0f, -1.0f }, .normal = { 0.0f, 0.0f, -1.0f }, .uv = { 1.0f, 1.0f }},
+        {.pos = {  1.0f,  1.0f, -1.0f }, .normal = { 0.0f, 0.0f, -1.0f }, .uv = { 0.0f, 1.0f }},
+
+        //left (-X)
+        {.pos = { -1.0f, -1.0f, -1.0f }, .normal = { -1.0f, 0.0f, 0.0f }, .uv = { 0.0f, 0.0f }},
+        {.pos = { -1.0f, -1.0f,  1.0f }, .normal = { -1.0f, 0.0f, 0.0f }, .uv = { 1.0f, 0.0f }},
+        {.pos = { -1.0f,  1.0f,  1.0f }, .normal = { -1.0f, 0.0f, 0.0f }, .uv = { 1.0f, 1.0f }},
+        {.pos = { -1.0f,  1.0f, -1.0f }, .normal = { -1.0f, 0.0f, 0.0f }, .uv = { 0.0f, 1.0f }},
+
+        //right (+X)
+        {.pos = {  1.0f, -1.0f,  1.0f }, .normal = { 1.0f, 0.0f, 0.0f }, .uv = { 0.0f, 0.0f }},
+        {.pos = {  1.0f, -1.0f, -1.0f }, .normal = { 1.0f, 0.0f, 0.0f }, .uv = { 1.0f, 0.0f }},
+        {.pos = {  1.0f,  1.0f, -1.0f }, .normal = { 1.0f, 0.0f, 0.0f }, .uv = { 1.0f, 1.0f }},
+        {.pos = {  1.0f,  1.0f,  1.0f }, .normal = { 1.0f, 0.0f, 0.0f }, .uv = { 0.0f, 1.0f }},
+
+        //top (+Y)
+        {.pos = { -1.0f,  1.0f,  1.0f }, .normal = { 0.0f, 1.0f, 0.0f }, .uv = { 0.0f, 0.0f }},
+        {.pos = {  1.0f,  1.0f,  1.0f }, .normal = { 0.0f, 1.0f, 0.0f }, .uv = { 1.0f, 0.0f }},
+        {.pos = {  1.0f,  1.0f, -1.0f }, .normal = { 0.0f, 1.0f, 0.0f }, .uv = { 1.0f, 1.0f }},
+        {.pos = { -1.0f,  1.0f, -1.0f }, .normal = { 0.0f, 1.0f, 0.0f }, .uv = { 0.0f, 1.0f }},
+
+        //bottom (-Y)
+        {.pos = { -1.0f, -1.0f, -1.0f }, .normal = { 0.0f, -1.0f, 0.0f }, .uv = { 0.0f, 0.0f }},
+        {.pos = {  1.0f, -1.0f, -1.0f }, .normal = { 0.0f, -1.0f, 0.0f }, .uv = { 1.0f, 0.0f }},
+        {.pos = {  1.0f, -1.0f,  1.0f }, .normal = { 0.0f, -1.0f, 0.0f }, .uv = { 1.0f, 1.0f }},
+        {.pos = { -1.0f, -1.0f,  1.0f }, .normal = { 0.0f, -1.0f, 0.0f }, .uv = { 0.0f, 1.0f }},
+    };
+
+    vector<u32> indices =
+    {
+        0,   2,   1,   0,   3,   2,   //front
+        4,   6,   5,   4,   7,  6,  //back
+        8,  10, 9,  8,  11, 10, //left
+        12, 14, 13, 12, 15, 14, //right
+        16, 18, 17, 16, 19, 18, //top
+        20, 22, 21, 20, 23, 22, //bottom
+    };
+
+    mesh = Examples::Test_Create_Mesh(
+        shader,
+        {
+            .pos = { 0, 0, 0 },
+            .rot = {},
+            .size = { 1, 1, 1 }
+        },
+        vector<Vertex>{vertices},
+        vector<u32>{indices});
+
+    cam = Examples::Test_Create_Camera(
+        gctx,
+        shader);
+    cam->SetSensitivityMultiplier(0.175f);
+    cam->SetSpeedMultiplier(7.5f);
 }
 
 void ElypsoEngine::Core::EarlyUpdate()
@@ -96,7 +155,7 @@ void ElypsoEngine::Core::FixedUpdate()
 
 void ElypsoEngine::Core::Update()
 {
-    string fps = Examples::GetFPS(0.5f);
+    string fps = Examples::Test_Get_FPS(0.5f);
     if (!fps.empty())
     {
         Log::Print(
@@ -126,6 +185,13 @@ void ElypsoEngine::Core::Update()
     Examples::Test_Window_Toggles(
         pw,
         input);
+
+    Examples::Test_Camera_Toggle(input);
+
+    Examples::Test_Camera_Move(
+        input,
+        cam,
+        EngineCore::GetDeltaTime());
 }
 
 void ElypsoEngine::Core::LateUpdate()

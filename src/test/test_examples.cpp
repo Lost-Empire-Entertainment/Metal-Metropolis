@@ -17,9 +17,10 @@
 #include "core/ee_core.hpp"
 #include "core/kg_context.hpp"
 #include "core/kw_core.hpp"
+#include "graphics/kw_window_global.hpp"
 #include "resources/kg_shader.hpp"
 #include "resources/kg_mesh.hpp"
-#include "graphics/kw_window_global.hpp"
+#include "resources/kg_camera.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -36,10 +37,7 @@ using KalaHeaders::KalaMath::SizeTarget;
 using KalaHeaders::KalaKeyStandards::KeyboardButton;
 
 using ElypsoEngine::Core::EngineCore;
-using KalaGraphics::Core::VSyncState;
 using KalaWindow::Core::KalaWindowCore;
-using KalaGraphics::Resources::Shader;
-using KalaGraphics::Resources::Mesh;
 using KalaWindow::Graphics::Window_Global;
 using KalaWindow::Graphics::SoundType;
 using KalaWindow::Graphics::FileType;
@@ -47,6 +45,11 @@ using KalaWindow::Graphics::PopupAction;
 using KalaWindow::Graphics::PopupType;
 using KalaWindow::Graphics::WindowMode;
 using KalaWindow::Core::InputCode;
+using KalaGraphics::Core::VSyncState;
+using KalaGraphics::Resources::Shader;
+using KalaGraphics::Resources::Mesh;
+using KalaGraphics::Resources::Camera;
+using KalaGraphics::Resources::CameraType;
 
 using std::string;
 using std::to_string;
@@ -375,5 +378,10 @@ namespace MetalMetropolis::Test
             {},
             SizeTarget::SIZE_WORLD,
             triangleTransform.size);
+
+        Camera* cam = Camera::Initialize(
+            gctx->GetID(),
+            shader->GetID());
+        cam->SetCameraType(CameraType::C_ORTHOGRAPHIC);
     }
 }

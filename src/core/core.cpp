@@ -65,7 +65,7 @@ void ElypsoEngine::Core::Init()
         {
             .pos = { 1, 1, 0 },
             .rot = {},
-            .size = { 1, 1, 0 }
+            .size = { 1000, 1000, 0 }
         },
         {
             //correct original

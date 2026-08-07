@@ -4,14 +4,16 @@ layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec2 inUV;
 
-layout(set = 0, binding = 0) uniform TransformUBO
+layout(push_constant) uniform TestData
 {
-    mat4 modelMatrix;
-} transform;
+    layout(offset = 0)  mat4 modelMatrix;
+    layout(offset = 64) vec4 color;
+    layout(offset = 80) uint debugMode;
+} testData;
 
-layout(set = 0, binding = 1) uniform CameraUBO
+layout(set = 0, binding = 0) uniform CameraUBO
 {
-    mat4 viewProjection;
+    mat4 projectionMatrix;
 } camera;
 
 layout(location = 0) out vec2 outUV;
@@ -19,8 +21,8 @@ layout(location = 0) out vec2 outUV;
 void main()
 {
     gl_Position =
-        camera.viewProjection
-        * transform.modelMatrix
+        camera.projectionMatrix
+        * testData.modelMatrix
         * vec4(inPosition, 1.0);
 
     outUV = inUV;

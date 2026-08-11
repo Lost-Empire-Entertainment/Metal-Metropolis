@@ -36,11 +36,12 @@ case "$1" in
         ;;
 esac
 
-OUT_VER=pr3
+OUT_VER=pr4
 OUT_DIR=out/${OUT_NAME}-${OUT_VER}
 
 README=README.md
 LICENSE=LICENSE.md
+CHANGES=CHANGES.md
 DOCS=docs
 
 #
@@ -55,6 +56,7 @@ mkdir "${OUT_DIR}"
 # The base files
 mf --f "${README}" --t "${OUT_DIR}/${README}"
 mf --f "${LICENSE}" --t "${OUT_DIR}/${LICENSE}"
+mf --f "${CHANGES}" --t "${OUT_DIR}/${CHANGES}"
 mf --f "${DOCS}" --t "${OUT_DIR}"
 
 # The binary

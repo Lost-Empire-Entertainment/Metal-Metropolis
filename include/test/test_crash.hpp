@@ -22,52 +22,56 @@ namespace MetalMetropolis::Test
         A_EXECUTE = 3u
     };
 
-    static void Crash_AccessViolation(AccessViolationType type)
+    class Crash
     {
-        switch (type)
+    public:
+        static void Crash_AccessViolation(AccessViolationType type)
         {
-        //Attempted to read invalid memory
-        case AccessViolationType::A_READ:
+            switch (type)
+            {
+            //Attempted to read invalid memory
+            case AccessViolationType::A_READ:
+            {
+                int* crashPtr = nullptr;
+                int value = *crashPtr;
+            }
+            //Attempted to write to invalid memory
+            case AccessViolationType::A_WRITE:
+            {
+                volatile int* crashPtr = nullptr;
+                *crashPtr = 42;
+
+                break;
+            }
+            //Attempted to execute invalid memory
+            case AccessViolationType::A_EXECUTE:
+            {
+                void (*crashFunc)() = nullptr;
+                crashFunc();
+            }
+
+            default: break;
+            }
+        }
+
+        static void Crash_StackOverflow()
         {
-            int* crashPtr = nullptr;
-            int value = *crashPtr;
+            for (int i = 0; i < 1000; i++)
+            {
+                void* space = alloca(1024 * 1024);
+
+                cout << "Allocated stack frame at: " << space << "\n";
+            }
         }
-        //Attempted to write to invalid memory
-        case AccessViolationType::A_WRITE:
+
+        static void Crash_DivideByZero()
         {
-            volatile int* crashPtr = nullptr;
-            *crashPtr = 42;
+            //does not trigger correctly in MINSIZEREL
 
-            break;
-        }
-        //Attempted to execute invalid memory
-        case AccessViolationType::A_EXECUTE:
-        {
-            void (*crashFunc)() = nullptr;
-            crashFunc();
-        }
+            int zero = time(nullptr) % 1;
+            int result = 42 / zero;
 
-        default: break;
-        }
-    }
-
-    static void Crash_StackOverflow()
-    {
-        for (int i = 0; i < 1000; i++)
-        {
-            void* space = alloca(1024 * 1024);
-
-            cout << "Allocated stack frame at: " << space << "\n";
-        }
-    }
-
-    static void Crash_DivideByZero()
-    {
-        //does not trigger correctly in MINSIZEREL
-
-        int zero = time(nullptr) % 1;
-        int result = 42 / zero;
-
-        cout << result << "\n";
-    }
+            cout << result << "\n";
+        }  
+    };
 }

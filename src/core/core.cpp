@@ -20,6 +20,7 @@
 #include "resources/kg_shader.hpp"
 #include "resources/kg_mesh.hpp"
 #include "resources/kg_camera.hpp"
+#include "import/kg_import_texture.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -36,6 +37,7 @@ using KalaGraphics::Resources::Vertex;
 using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
 using KalaGraphics::Resources::Camera;
+using KalaGraphics::Import::ImportTexture;
 
 using std::string;
 using std::array;
@@ -53,7 +55,7 @@ static path exePath{};
 
 extern const AppConfig ElypsoEngine::Core::appConfig = 
 {
-    .title = "Metal Metropolis Pre-Release 3",
+    .title = "Metal Metropolis Pre-Release 4",
     .pos = 600
 };
 
@@ -73,8 +75,8 @@ void ElypsoEngine::Core::Init()
     shader = Examples::Test_Create_Shader(
         gctx,
         array<path, 2>{
-            "files/shaders/rasterized/test_rs_vert.spv",
-            "files/shaders/rasterized/test_rs_frag.spv"
+            "files/shaders/rasterized/mesh_basic_vert.spv",
+            "files/shaders/rasterized/mesh_basic_frag.spv"
         });
 
     vector<Vertex> vertices =
@@ -141,6 +143,16 @@ void ElypsoEngine::Core::Init()
         shader);
     cam->SetSensitivityMultiplier(0.175f);
     cam->SetSpeedMultiplier(7.5f);
+
+    /*
+    ImportTexture* it = ImportTexture::Initialize(exePath.parent_path() / "files/textures/test.png");
+    if (!it)
+    {
+        KalaWindowCore::ForceClose(
+            "test",
+            "import texture force close");
+    }
+    */
 }
 
 void ElypsoEngine::Core::EarlyUpdate()

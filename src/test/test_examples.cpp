@@ -27,7 +27,6 @@ using KalaHeaders::KalaLog::LogType;
 using KalaHeaders::KalaMath::Transform3D;
 using KalaHeaders::KalaMath::vec2;
 using KalaHeaders::KalaMath::vec3;
-using KalaHeaders::KalaMath::toeuler3;
 using KalaHeaders::KalaMath::setpos3d;
 using KalaHeaders::KalaMath::setroteuler;
 using KalaHeaders::KalaMath::setsize3d;
@@ -433,10 +432,9 @@ namespace MetalMetropolis::Test
         }
 
         shader->SetShaderData(
-            {
-                .shader_vert = shaderFiles[0],
-                .shader_frag = shaderFiles[1]
-            });
+            false,
+            path(shaderFiles[0]),
+            path(shaderFiles[1]));
 
         return shader;
     }
@@ -485,16 +483,13 @@ namespace MetalMetropolis::Test
     }
 
     Camera* Examples::Test_Create_Camera(
-        GraphicsContext *gctx,
         Shader *shader,
         Transform&& transform)
     {
         //sync ids before generating camera
         EngineCore::SyncID();
 
-        Camera* cam = Camera::Initialize(
-            gctx->GetID(),
-            shader->GetID());
+        Camera* cam = Camera::Initialize(shader->GetID());
         if (!cam)
         {
             KalaWindowCore::ForceClose(

@@ -73,7 +73,6 @@ namespace MetalMetropolis::Test
             vector<u32>&& indices = {}); 
 
         static Camera* Test_Create_Camera(
-            GraphicsContext* gctx,
             Shader* shader,
             Transform&& transform = {});
     };

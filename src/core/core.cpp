@@ -75,8 +75,8 @@ void ElypsoEngine::Core::Init()
     shader = Examples::Test_Create_Shader(
         gctx,
         array<path, 2>{
-            "files/shaders/rasterized/mesh_basic_vert.spv",
-            "files/shaders/rasterized/mesh_basic_frag.spv"
+            "files/shaders/unlit_vert.spv",
+            "files/shaders/unlit_frag.spv"
         });
 
     vector<Vertex> vertices =
@@ -138,9 +138,7 @@ void ElypsoEngine::Core::Init()
         vector<Vertex>{vertices},
         vector<u32>{indices});
 
-    cam = Examples::Test_Create_Camera(
-        gctx,
-        shader);
+    cam = Examples::Test_Create_Camera(shader);
     cam->SetSensitivityMultiplier(0.175f);
     cam->SetSpeedMultiplier(7.5f);
 

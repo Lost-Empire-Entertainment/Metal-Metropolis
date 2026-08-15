@@ -439,8 +439,29 @@ namespace MetalMetropolis::Test
         return shader;
     }
 
+    Texture* Examples::Test_Create_Texture(
+        Shader *shader,
+        TextureData&& textureData)
+    {
+        //sync ids before generating texture
+        EngineCore::SyncID();
+
+        Texture* texture = Texture::Initialize(
+            shader->GetID(),
+            std::move(textureData));
+        if (!texture)
+        {
+            KalaWindowCore::ForceClose(
+                "Game core error",
+                "Failed to initialize test texture!");
+        }
+
+        return texture;
+    }
+
     Mesh* Examples::Test_Create_Mesh(
         Shader* shader,
+        Texture* texture,
         Transform&& transform,
         vector<Vertex>&& vertices,
         vector<u32>&& indices)
@@ -448,7 +469,9 @@ namespace MetalMetropolis::Test
         //sync ids before generating mesh
         EngineCore::SyncID();
 
-        Mesh* mesh = Mesh::Initialize(shader->GetID());
+        Mesh* mesh = Mesh::Initialize(
+            shader->GetID(),
+            texture->GetID());
         if (!mesh)
         {
             KalaWindowCore::ForceClose(
@@ -456,26 +479,28 @@ namespace MetalMetropolis::Test
                 "Failed to initialize test mesh!");
         }
 
-        mesh->GetVertices() = std::move(vertices);
-        mesh->GetIndices() = std::move(indices);
+        mesh->SetVertices(std::move(vertices));
+        mesh->SetIndices(std::move(indices));
 
-        Transform3D& meshTransform = mesh->GetTransform();
+        Transform3D mt = mesh->GetTransform();
 
         setpos3d(
-            meshTransform,
+            mt,
             {},
             PosTarget::POS_WORLD,
             transform.pos);
         setroteuler(
-            meshTransform,
+            mt,
             {}, 
             RotTarget::ROT_WORLD,
             transform.rot);
         setsize3d(
-            meshTransform,
+            mt,
             {},
             SizeTarget::SIZE_WORLD,
             transform.size);
+
+        mesh->SetTransform(std::move(mt));
 
         mesh->UpdateMeshData();
 
@@ -501,10 +526,12 @@ namespace MetalMetropolis::Test
             && transform.rot != 0
             && transform.size != 0)
         {
-            Transform3D& ct = cam->GetTransform();
+            Transform3D ct = cam->GetTransform();
             ct.pos_world = transform.pos;
             ct.rot_world = toquat(transform.rot);
             ct.size_world = transform.size;
+
+            cam->SetTransform(std::move(ct));
 
             cam->Move({}, {});
         }

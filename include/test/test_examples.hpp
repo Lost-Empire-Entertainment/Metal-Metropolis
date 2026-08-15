@@ -13,6 +13,7 @@
 #include "core/kg_context.hpp"
 #include "resources/kg_shader.hpp"
 #include "resources/kg_mesh.hpp"
+#include "resources/kg_texture.hpp"
 #include "resources/kg_camera.hpp"
 
 namespace MetalMetropolis::Test
@@ -24,6 +25,8 @@ namespace MetalMetropolis::Test
     using KalaGraphics::Resources::Mesh;
     using KalaGraphics::Resources::Transform;
     using KalaGraphics::Resources::Vertex;
+    using KalaGraphics::Resources::Texture;
+    using KalaGraphics::Resources::TextureData;
     using KalaGraphics::Resources::Camera;
 
     using std::array;
@@ -66,8 +69,13 @@ namespace MetalMetropolis::Test
             GraphicsContext* gctx,
             array<path, 2>&& shaderFiles);
 
+        static Texture* Test_Create_Texture(
+            Shader* shader,
+            TextureData&& textureData = {});
+
         static Mesh* Test_Create_Mesh(
             Shader* shader,
+            Texture* texture,
             Transform&& transform = {},
             vector<Vertex>&& vertices = {},
             vector<u32>&& indices = {}); 

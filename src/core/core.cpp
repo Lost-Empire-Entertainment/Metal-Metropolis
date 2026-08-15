@@ -19,6 +19,7 @@
 #include "core/kg_context.hpp"
 #include "resources/kg_shader.hpp"
 #include "resources/kg_mesh.hpp"
+#include "resources/kg_texture.hpp"
 #include "resources/kg_camera.hpp"
 #include "import/kg_import_texture.hpp"
 
@@ -36,6 +37,7 @@ using KalaGraphics::Core::GraphicsContext;
 using KalaGraphics::Resources::Vertex;
 using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
+using KalaGraphics::Resources::Texture;
 using KalaGraphics::Resources::Camera;
 using KalaGraphics::Import::ImportTexture;
 
@@ -49,6 +51,7 @@ static Input* input{};
 
 static Shader* shader{};
 static Mesh* mesh{};
+static Texture* tex{};
 static Camera* cam{};
 
 static path exePath{};
@@ -78,6 +81,8 @@ void ElypsoEngine::Core::Init()
             "files/shaders/unlit_vert.spv",
             "files/shaders/unlit_frag.spv"
         });
+
+    tex = Examples::Test_Create_Texture(shader);
 
     vector<Vertex> vertices =
     {
@@ -130,6 +135,7 @@ void ElypsoEngine::Core::Init()
 
     mesh = Examples::Test_Create_Mesh(
         shader,
+        tex,
         {
             .pos = { 0, 0, 0 },
             .rot = {},

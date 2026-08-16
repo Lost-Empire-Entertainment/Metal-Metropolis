@@ -48,6 +48,7 @@ using KalaWindow::Core::InputCode;
 using KalaGraphics::Core::VSyncState;
 using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
+using KalaGraphics::Resources::TextureFilterMode;
 
 using std::string;
 using std::to_string;
@@ -128,9 +129,15 @@ static constexpr InputCode combo_toggle_resizable[] =
     { .kb = KeyboardButton::K_2 }
 };
 
-static constexpr InputCode combo_toggle_cam_move[] =
+static constexpr InputCode combo_toggle_texture_filter_mode[] =
 {
     { .kb = KeyboardButton::K_N },
+    { .kb = KeyboardButton::K_1 }
+};
+
+static constexpr InputCode combo_toggle_cam_move[] =
+{
+    { .kb = KeyboardButton::K_M },
     { .kb = KeyboardButton::K_1 }
 };
 
@@ -327,6 +334,26 @@ namespace MetalMetropolis::Test
 
             Log::Print("@@@@@ set resizable state to: " 
                 + string(desired ? "on" : "off"));
+        }
+    }
+
+    void Examples::Test_Texture_Filter_Mode(
+        Input* input,
+        Texture* tex)
+    {
+        if (input->IsComboPressed(combo_toggle_texture_filter_mode))
+        {
+            bool isLinear = tex->GetFilterMode() == TextureFilterMode::FILTER_LINEAR;
+            bool desired = !isLinear;
+
+            tex->SetFilterMode(desired 
+                ? TextureFilterMode::FILTER_LINEAR
+                : TextureFilterMode::FILTER_NEAREST);
+
+            tex->UpdateTextureData();
+
+            Log::Print("@@@@@ set texture filter mode to: " 
+                + string(desired ? "linear" : "nearest"));
         }
     }
 

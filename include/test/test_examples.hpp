@@ -58,6 +58,10 @@ namespace MetalMetropolis::Test
             ProcessWindow* pw,
             Input* input);
 
+        static void Test_Texture_Filter_Mode(
+            Input* input,
+            Texture* tex);
+
         static void Test_Camera_Toggle(Input* input);
 
         static void Test_Camera_Move(

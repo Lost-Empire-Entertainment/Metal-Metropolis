@@ -1,11 +1,13 @@
-# pre-release 4 (in development)
+# pre-release 4
 
 Changes:
-- added texture to cube (in development)
-- added 2D texture on screen like a UI element (in development)
+- added texture to cube
+- can toggle between filter mode
 
 Instructions:
-- same as previous
+- same as previous except:
+    - press N + 1 to toggle test texture filter mode between linear and nearest
+    - press M + 1 to toggle camera movement on and off
 
 Fixes:
 - fixed windows build having popup message and title swapped

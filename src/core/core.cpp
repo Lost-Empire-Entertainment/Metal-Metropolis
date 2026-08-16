@@ -38,6 +38,9 @@ using KalaGraphics::Resources::Vertex;
 using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
 using KalaGraphics::Resources::Texture;
+using KalaGraphics::Resources::TextureData;
+using KalaGraphics::Resources::TextureFilterMode;
+using KalaGraphics::Resources::FALLBACK_TEXTURE;
 using KalaGraphics::Resources::Camera;
 using KalaGraphics::Import::ImportTexture;
 
@@ -82,7 +85,17 @@ void ElypsoEngine::Core::Init()
             "files/shaders/unlit_frag.spv"
         });
 
-    tex = Examples::Test_Create_Texture(shader);
+    TextureData tdata =
+    {
+        .pixelData = vector<u8>(
+                FALLBACK_TEXTURE.begin(), 
+                FALLBACK_TEXTURE.end()),
+        .filterMode = TextureFilterMode::FILTER_NEAREST,
+        .size = 16
+    };
+    tex = Examples::Test_Create_Texture(
+        shader,
+        std::move(tdata));
 
     vector<Vertex> vertices =
     {
@@ -201,6 +214,10 @@ void ElypsoEngine::Core::Update()
     Examples::Test_Window_Toggles(
         pw,
         input);
+
+    Examples::Test_Texture_Filter_Mode(
+        input,
+        tex);
 
     Examples::Test_Camera_Toggle(input);
 

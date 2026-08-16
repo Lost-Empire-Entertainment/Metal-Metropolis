@@ -1,3 +1,15 @@
+# pre-release 5 (in development)
+
+Changes:
+- added clickable UI buttons for debugging (in development)
+- ...
+
+Instructions:
+- same as previous
+
+Fixes:
+- fixed stacking commands after pressing V + 1, V + 2 or V + 3
+
 # pre-release 4
 
 Changes:

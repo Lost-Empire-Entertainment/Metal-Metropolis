@@ -250,7 +250,7 @@ namespace MetalMetropolis::Test
     }
 
     void Examples::Test_Get_Files(
-        Input *input,
+        Input* input,
         vector<string>&& types,
         path&& requiredRoot)
     {
@@ -311,8 +311,8 @@ namespace MetalMetropolis::Test
     }
 
     void Examples::Test_Window_Toggles(
-        ProcessWindow *pw,
-        Input *input)
+        ProcessWindow* pw,
+        Input* input)
     {
         if (input->IsComboPressed(combo_toggle_full_screen))
         {
@@ -357,7 +357,7 @@ namespace MetalMetropolis::Test
         }
     }
 
-    void Examples::Test_Camera_Toggle(Input *input)
+    void Examples::Test_Camera_Toggle(Input* input)
     {
         if (input->IsComboPressed(combo_toggle_cam_move))
         {
@@ -381,7 +381,7 @@ namespace MetalMetropolis::Test
 
     void Examples::Test_Camera_Move(
         Input* input,
-        Camera *cam,
+        Camera* cam,
         f32 deltaTime)
     {
         static f32 sprintMultiplier = 2.0f;
@@ -444,7 +444,7 @@ namespace MetalMetropolis::Test
     }
 
     Shader* Examples::Test_Create_Shader(
-        GraphicsContext *gctx,
+        GraphicsContext* gctx,
         array<path, 2>&& shaderFiles)
     {
         //sync ids before generating shader
@@ -467,7 +467,7 @@ namespace MetalMetropolis::Test
     }
 
     Texture* Examples::Test_Create_Texture(
-        Shader *shader,
+        Shader* shader,
         TextureData&& textureData)
     {
         //sync ids before generating texture
@@ -535,7 +535,7 @@ namespace MetalMetropolis::Test
     }
 
     Camera* Examples::Test_Create_Camera(
-        Shader *shader,
+        Shader* shader,
         Transform&& transform)
     {
         //sync ids before generating camera

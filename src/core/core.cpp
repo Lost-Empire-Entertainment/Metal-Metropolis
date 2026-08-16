@@ -61,7 +61,7 @@ static path exePath{};
 
 extern const AppConfig ElypsoEngine::Core::appConfig = 
 {
-    .title = "Metal Metropolis Pre-Release 4",
+    .title = "Metal Metropolis Pre-Release 5",
     .pos = 600
 };
 

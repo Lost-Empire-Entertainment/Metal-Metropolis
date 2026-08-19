@@ -3,15 +3,13 @@
 //This is free software, and you are welcome to redistribute it under certain conditions.
 //Read LICENSE.md for more information.
 
-#include <cstdint>
 #include <iostream>
+
+#include "core_utils.hpp"
 
 namespace MetalMetropolis::Test
 {
     using std::cout;
-
-    using u8 = uint8_t;
-    using u64 = uint64_t;
 
     enum class AccessViolationType : u8
     {

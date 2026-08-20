@@ -2,6 +2,7 @@
 
 Changes:
 - added clickable UI buttons for debugging (in development)
+- switched to dynamic rendering in KalaGraphics (in development)
 - ...
 
 Instructions:
@@ -9,6 +10,7 @@ Instructions:
 
 Fixes:
 - fixed stacking commands after pressing V + 1, V + 2 or V + 3
+- ...
 
 # pre-release 4
 

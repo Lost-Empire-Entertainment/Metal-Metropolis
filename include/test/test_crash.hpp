@@ -27,11 +27,12 @@ namespace MetalMetropolis::Test
         {
             switch (type)
             {
+            default:
             //Attempted to read invalid memory
             case AccessViolationType::A_READ:
             {
                 int* crashPtr = nullptr;
-                int value = *crashPtr;
+                int _ = *crashPtr;
             }
             //Attempted to write to invalid memory
             case AccessViolationType::A_WRITE:
@@ -47,8 +48,6 @@ namespace MetalMetropolis::Test
                 void (*crashFunc)() = nullptr;
                 crashFunc();
             }
-
-            default: break;
             }
         }
 

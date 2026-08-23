@@ -67,12 +67,40 @@ extern const AppConfig ElypsoEngine::Core::appConfig =
 
 void ElypsoEngine::Core::Init()
 {
-    EngineWindow* ew = EngineWindow::GetRegistry().GetContent(0, false);
-    pw = ProcessWindow::GetRegistry().GetContent(ew->GetWindowContextID());
+    EngineWindow* ew{};
+    string err = EngineWindow::GetRegistry().GetContent(0, ew, false);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to get engine window! Reason: " + err);
+    }
+
+    err = ProcessWindow::GetRegistry().GetContent(ew->GetWindowContextID(), pw);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to get process window from engine window! Reason: " + err);
+    }
+
     pw->SetMinSize({800, 600});
 
-    gctx = GraphicsContext::GetRegistry().GetContent(ew->GetGraphicsContextID());
-    input = Input::GetRegistry().GetContent(pw->GetInputID());
+    err = GraphicsContext::GetRegistry().GetContent(ew->GetGraphicsContextID(), gctx);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to get graphics context from engine windows process window! Reason: " + err);
+    }
+
+    err = Input::GetRegistry().GetContent(pw->GetInputID(), input);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to get inpur from engine windows process window! Reason: " + err);
+    }
 
     exePath = KalaWindowCore::GetExePath();
 

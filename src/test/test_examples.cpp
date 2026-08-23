@@ -43,6 +43,7 @@ using KalaWindow::Graphics::SoundType;
 using KalaWindow::Graphics::FileType;
 using KalaWindow::Graphics::PopupAction;
 using KalaWindow::Graphics::PopupType;
+using KalaWindow::Graphics::PopupResult;
 using KalaWindow::Graphics::WindowMode;
 using KalaWindow::Core::InputCode;
 using KalaGraphics::Core::VSyncState;
@@ -165,7 +166,7 @@ namespace MetalMetropolis::Test
             {
                 if (files.empty())
                 {
-                    Window_Global::CreatePopup(
+                    PopupResult _ = Window_Global::CreatePopup(
                         "File drag result popup",
                         "This popup confirms that no files were dragged on screen!",
                         PopupAction::POPUP_ACTION_OK,
@@ -185,7 +186,7 @@ namespace MetalMetropolis::Test
                         to_string((i32)pos.x) + ", " 
                         + to_string((i32)pos.y);
 
-                    Window_Global::CreatePopup(
+                    PopupResult _ = Window_Global::CreatePopup(
                         "File drag result popup",
                         "This popup confirms that files '" + filesString 
                         + "' were dragged on screen at pos '" + posString + "'!",
@@ -458,7 +459,7 @@ namespace MetalMetropolis::Test
                 "Failed to initialize test shader!");
         }
 
-        shader->SetShaderData(
+        shader->UpdateShaderData(
             false,
             path(shaderFiles[0]),
             path(shaderFiles[1]));

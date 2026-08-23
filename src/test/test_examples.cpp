@@ -445,24 +445,25 @@ namespace MetalMetropolis::Test
     }
 
     Shader* Examples::Test_Create_Shader(
-        GraphicsContext* gctx,
+        Viewport* viewport,
+        bool is2D,
         array<path, 2>&& shaderFiles)
     {
         //sync ids before generating shader
         EngineCore::SyncID();
 
-        Shader* shader = Shader::Initialize(gctx->GetID());
+        Shader* shader = Shader::Initialize(
+            viewport->GetID(),
+            is2D,
+            path(shaderFiles[0]),
+            path(shaderFiles[1]));
+
         if (!shader)
         {
             KalaWindowCore::ForceClose(
                 "Game core error",
                 "Failed to initialize test shader!");
         }
-
-        shader->UpdateShaderData(
-            false,
-            path(shaderFiles[0]),
-            path(shaderFiles[1]));
 
         return shader;
     }

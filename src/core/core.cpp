@@ -3,7 +3,6 @@
 //This is free software, and you are welcome to redistribute it under certain conditions.
 //Read LICENSE.md for more information.
 
-#include <array>
 #include <filesystem>
 
 #include "log_utils.hpp"
@@ -17,6 +16,7 @@
 #include "core/kw_input.hpp"
 #include "core/kw_core.hpp"
 #include "core/kg_context.hpp"
+#include "core/kg_viewport.hpp"
 #include "resources/kg_shader.hpp"
 #include "resources/kg_mesh.hpp"
 #include "resources/kg_texture.hpp"
@@ -34,6 +34,7 @@ using KalaWindow::Graphics::ProcessWindow;
 using KalaWindow::Core::Input;
 using KalaWindow::Core::KalaWindowCore;
 using KalaGraphics::Core::GraphicsContext;
+using KalaGraphics::Core::Viewport;
 using KalaGraphics::Resources::Vertex;
 using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
@@ -45,14 +46,14 @@ using KalaGraphics::Resources::Camera;
 using KalaGraphics::Import::ImportTexture;
 
 using std::string;
-using std::array;
 using std::filesystem::path;
 
 static GraphicsContext* gctx{};
+static Viewport* vp{};
 static ProcessWindow* pw{};
 static Input* input{};
 
-static Shader* shader{};
+static Shader* shader3D{};
 static Mesh* mesh{};
 static Texture* tex{};
 static Camera* cam{};
@@ -73,7 +74,7 @@ void ElypsoEngine::Core::Init()
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to get engine window! Reason: " + err);
+            "Failed to get engine window '0'! Reason: " + err);
     }
 
     err = ProcessWindow::GetRegistry().GetContent(ew->GetWindowContextID(), pw);
@@ -81,7 +82,7 @@ void ElypsoEngine::Core::Init()
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to get process window from engine window! Reason: " + err);
+            "Failed to get process window from engine window '" + to_string(ew->GetID()) + "'! Reason: " + err);
     }
 
     pw->SetMinSize({800, 600});
@@ -91,7 +92,23 @@ void ElypsoEngine::Core::Init()
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to get graphics context from engine windows process window! Reason: " + err);
+            "Failed to get graphics context from process window '" + to_string(pw->GetID()) + "'! Reason: " + err);
+    }
+
+    err = Viewport::GetRegistry().GetContent(gctx->GetRootViewportID(), vp);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to get root viewport from graphics context '" + to_string(gctx->GetID()) + "'! Reason: " + err);
+    }
+
+    err = Shader::GetRegistry().GetContent(vp->GetPrimary3DShaderID(), shader3D);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to get shader from viewport '" + to_string(vp->GetID()) + "'! Reason: " + err);
     }
 
     err = Input::GetRegistry().GetContent(pw->GetInputID(), input);
@@ -106,12 +123,14 @@ void ElypsoEngine::Core::Init()
 
     Examples::Test_Popup_And_File_Drag(pw);
 
+    /*
     shader = Examples::Test_Create_Shader(
         gctx,
         array<path, 2>{
             "files/shaders/unlit_vert.spv",
             "files/shaders/unlit_frag.spv"
         });
+    */
 
     TextureData tdata =
     {
@@ -122,7 +141,7 @@ void ElypsoEngine::Core::Init()
         .size = 16
     };
     tex = Examples::Test_Create_Texture(
-        shader,
+        shader3D,
         std::move(tdata));
 
     vector<Vertex> vertices =
@@ -175,7 +194,7 @@ void ElypsoEngine::Core::Init()
     };
 
     mesh = Examples::Test_Create_Mesh(
-        shader,
+        shader3D,
         tex,
         {
             .pos = { 0, 0, 0 },
@@ -185,7 +204,7 @@ void ElypsoEngine::Core::Init()
         vector<Vertex>{vertices},
         vector<u32>{indices});
 
-    cam = Examples::Test_Create_Camera(shader);
+    cam = Examples::Test_Create_Camera(shader3D);
     cam->SetSensitivityMultiplier(0.175f);
     cam->SetSpeedMultiplier(7.5f);
 

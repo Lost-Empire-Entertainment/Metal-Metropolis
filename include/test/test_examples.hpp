@@ -11,6 +11,7 @@
 #include "core/kw_input.hpp"
 #include "graphics/kw_window.hpp"
 #include "core/kg_context.hpp"
+#include "core/kg_viewport.hpp"
 #include "resources/kg_shader.hpp"
 #include "resources/kg_mesh.hpp"
 #include "resources/kg_texture.hpp"
@@ -21,6 +22,7 @@ namespace MetalMetropolis::Test
     using KalaWindow::Core::Input;
     using KalaWindow::Graphics::ProcessWindow;
     using KalaGraphics::Core::GraphicsContext;
+    using KalaGraphics::Core::Viewport;
     using KalaGraphics::Resources::Shader;
     using KalaGraphics::Resources::Mesh;
     using KalaGraphics::Resources::Transform;
@@ -70,7 +72,8 @@ namespace MetalMetropolis::Test
             f32 deltaTime);
 
         static Shader* Test_Create_Shader(
-            GraphicsContext* gctx,
+            Viewport* viewport,
+            bool is2D,
             array<path, 2>&& shaderFiles);
 
         static Texture* Test_Create_Texture(

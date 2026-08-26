@@ -35,6 +35,7 @@ using KalaWindow::Core::Input;
 using KalaWindow::Core::KalaWindowCore;
 using KalaGraphics::Core::GraphicsContext;
 using KalaGraphics::Core::Viewport;
+using KalaGraphics::Core::ViewportType;
 using KalaGraphics::Resources::Vertex;
 using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
@@ -43,6 +44,7 @@ using KalaGraphics::Resources::TextureData;
 using KalaGraphics::Resources::TextureFilterMode;
 using KalaGraphics::Resources::FALLBACK_TEXTURE;
 using KalaGraphics::Resources::Camera;
+using KalaGraphics::Resources::CameraType;
 using KalaGraphics::Import::ImportTexture;
 
 using std::string;
@@ -59,6 +61,12 @@ static Texture* tex{};
 static Camera* cam{};
 
 static path exePath{};
+
+static const path shader_unlit_vert = path("files") / "shaders" / "unlit_vert.spv";
+static const path shader_unlit_frag = path("files") / "shaders" / "unlit_frag.spv";
+
+static const path shader_ui_rect_vert = path("files") / "shaders" / "ui_rect_vert.spv";
+static const path shader_ui_rect_frag = path("files") / "shaders" / "ui_rect_frag.spv";
 
 extern const AppConfig ElypsoEngine::Core::appConfig = 
 {
@@ -223,6 +231,79 @@ void ElypsoEngine::Core::Init()
             "import texture force close");
     }
     */
+
+    //sync to ensure viewport gets the highest id
+    EngineCore::SyncID();
+
+    Viewport* secondVP = Viewport::Initialize(gctx->GetID());
+
+    //sync to ensure 3D shader gets the highest id
+    EngineCore::SyncID();
+
+    Shader* unlit = Shader::Initialize(
+        secondVP->GetID(),
+        false,
+        path(shader_unlit_vert),
+        path(shader_unlit_frag));
+
+    if (!unlit)
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to create new unlit shader!");
+    }
+
+    //sync to ensure 2D shader gets the highest id
+    EngineCore::SyncID();
+
+    Shader* rect = Shader::Initialize(
+        secondVP->GetID(),
+        true,
+        path(shader_ui_rect_vert),
+        path(shader_ui_rect_frag));
+
+    if (!rect)
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to create new rect shader!");
+    }
+
+    //sync to ensure 3D cam gets the highest id
+    EngineCore::SyncID();
+
+    Camera* new3DCam = Camera::Initialize(
+        unlit->GetID(),
+        CameraType::CAM_PERSPECTIVE);
+
+    if (!new3DCam)
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to create new 3D camera!");
+    }
+
+    //sync to ensure 2D cam gets the highest id
+    EngineCore::SyncID();
+
+    Camera* new2DCam = Camera::Initialize(
+        rect->GetID(),
+        CameraType::CAM_ORTHOGRAPHIC);
+
+    if (!new2DCam)
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to create new 2D camera!");
+    }
+
+    secondVP->SetDynamicResizeState(false);
+    secondVP->SetType(ViewportType::VP_FILL);
+    secondVP->SetSize(250);
+    secondVP->SetOffset(100);
+    secondVP->SetBackgroundColor(1);
+
+    vp->SetType(ViewportType::VP_CENTER);
 }
 
 void ElypsoEngine::Core::EarlyUpdate()

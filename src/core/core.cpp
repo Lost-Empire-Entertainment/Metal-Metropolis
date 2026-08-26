@@ -108,15 +108,25 @@ void ElypsoEngine::Core::Init()
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to get shader from viewport '" + to_string(vp->GetID()) + "'! Reason: " + err);
+            "Failed to get primary 3D shader from viewport '" + to_string(vp->GetID()) + "'! Reason: " + err);
     }
+
+    err = Camera::GetRegistry().GetContent(vp->GetPrimary3DCameraID(), cam);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to get primary 3D camera from viewport '" + to_string(vp->GetID()) + "'! Reason: " + err);
+    }
+    cam->SetSensitivityMultiplier(0.175f);
+    cam->SetSpeedMultiplier(7.5f);
 
     err = Input::GetRegistry().GetContent(pw->GetInputID(), input);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to get inpur from engine windows process window! Reason: " + err);
+            "Failed to get input from engine windows process window '" + to_string(pw->GetID()) + "'! Reason: " + err);
     }
 
     exePath = KalaWindowCore::GetExePath();
@@ -203,10 +213,6 @@ void ElypsoEngine::Core::Init()
         },
         vector<Vertex>{vertices},
         vector<u32>{indices});
-
-    cam = Examples::Test_Create_Camera(shader3D);
-    cam->SetSensitivityMultiplier(0.175f);
-    cam->SetSpeedMultiplier(7.5f);
 
     /*
     ImportTexture* it = ImportTexture::Initialize(exePath.parent_path() / "files/textures/test.png");

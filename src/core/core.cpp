@@ -17,6 +17,7 @@
 #include "core/kw_core.hpp"
 #include "core/kg_context.hpp"
 #include "core/kg_viewport.hpp"
+#include "core/kg_hit_test.hpp"
 #include "resources/kg_shader.hpp"
 #include "resources/kg_mesh.hpp"
 #include "resources/kg_texture.hpp"
@@ -36,6 +37,8 @@ using KalaWindow::Core::KalaWindowCore;
 using KalaGraphics::Core::GraphicsContext;
 using KalaGraphics::Core::Viewport;
 using KalaGraphics::Core::ViewportType;
+using KalaGraphics::Core::ViewportStaticSize;
+using KalaGraphics::Core::HitTest;
 using KalaGraphics::Resources::Vertex;
 using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
@@ -52,6 +55,9 @@ using std::filesystem::path;
 
 static GraphicsContext* gctx{};
 static Viewport* vp{};
+static Viewport* vp2{};
+static HitTest* ht{};
+
 static ProcessWindow* pw{};
 static Input* input{};
 
@@ -76,6 +82,17 @@ extern const AppConfig ElypsoEngine::Core::appConfig =
 
 void ElypsoEngine::Core::Init()
 {
+    //print all user system info for now always at the very top
+
+    Log::Print(KalaWindowCore::GetCPUInfoString());
+    Log::Print(" ");
+    Log::Print(KalaWindowCore::GetGPUInfoString());
+    Log::Print(" ");
+    Log::Print(KalaWindowCore::GetRAMInfoString(true));
+    Log::Print(" ");
+    Log::Print(KalaWindowCore::GetOSInfoString());
+    Log::Print(" ");
+
     EngineWindow* ew{};
     string err = EngineWindow::GetRegistry().GetContent(0, ew, false);
     if (!err.empty())
@@ -101,6 +118,14 @@ void ElypsoEngine::Core::Init()
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
             "Failed to get graphics context from process window '" + to_string(pw->GetID()) + "'! Reason: " + err);
+    }
+
+    err = HitTest::GetRegistry().GetContent(gctx->GetHitTestID(), ht);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to get hit test from graphics context '" + to_string(gctx->GetID()) + "'! Reason: " + err);
     }
 
     err = Viewport::GetRegistry().GetContent(gctx->GetRootViewportID(), vp);
@@ -222,26 +247,20 @@ void ElypsoEngine::Core::Init()
         vector<Vertex>{vertices},
         vector<u32>{indices});
 
-    /*
-    ImportTexture* it = ImportTexture::Initialize(exePath.parent_path() / "files/textures/test.png");
-    if (!it)
-    {
-        KalaWindowCore::ForceClose(
-            "test",
-            "import texture force close");
-    }
-    */
+    //
+    // CREATE SECOND VIEWPORT
+    //
 
     //sync to ensure viewport gets the highest id
     EngineCore::SyncID();
 
-    Viewport* secondVP = Viewport::Initialize(gctx->GetID());
+    Viewport* vp2 = Viewport::Initialize(gctx->GetID());
 
     //sync to ensure 3D shader gets the highest id
     EngineCore::SyncID();
 
     Shader* unlit = Shader::Initialize(
-        secondVP->GetID(),
+        vp2->GetID(),
         false,
         path(shader_unlit_vert),
         path(shader_unlit_frag));
@@ -257,7 +276,7 @@ void ElypsoEngine::Core::Init()
     EngineCore::SyncID();
 
     Shader* rect = Shader::Initialize(
-        secondVP->GetID(),
+        vp2->GetID(),
         true,
         path(shader_ui_rect_vert),
         path(shader_ui_rect_frag));
@@ -297,13 +316,14 @@ void ElypsoEngine::Core::Init()
             "Failed to create new 2D camera!");
     }
 
-    secondVP->SetDynamicResizeState(false);
-    secondVP->SetType(ViewportType::VP_FILL);
-    secondVP->SetSize(250);
-    secondVP->SetOffset(100);
-    secondVP->SetBackgroundColor(1);
+    vp2->SetDynamicResizeState(false);
+    vp2->SetType(ViewportType::VP_FILL);
+    vp2->SetSize(250);
+    vp2->SetOffset(100);
+    vp2->SetBackgroundColor(1);
 
     vp->SetType(ViewportType::VP_CENTER);
+    vp->SetSize(ViewportStaticSize::VP_640_480);
 }
 
 void ElypsoEngine::Core::EarlyUpdate()
@@ -318,6 +338,37 @@ void ElypsoEngine::Core::FixedUpdate()
 
 void ElypsoEngine::Core::Update()
 {
+    static u32 lastVP{};
+    Viewport* hoveredVP{};
+    /*
+    if (ht->GetViewportID() == 0
+        && lastVP != 0)
+    {
+        lastVP = 0;
+        Log::Print("@@@@@ no longer hovering over any viewport...");
+    }
+    else if (ht->GetViewportID() != 0)
+    {
+        string err = Viewport::GetRegistry().GetContent(ht->GetViewportID(), hoveredVP);
+        if (err.empty()
+            && lastVP != hoveredVP->GetID())
+        {
+            lastVP = hoveredVP->GetID();
+            Log::Print("@@@@@ hovering over viewport '" + to_string(lastVP) + "'...");
+        }
+    }
+    */
+
+    string err = Viewport::GetRegistry().GetContent(ht->GetViewportID(), hoveredVP);
+    if (err.empty())
+    {
+        Log::Print("@@@@@ hovering over viewport '" + to_string(hoveredVP->GetID()) + "'...");
+    }
+    else if (ht->GetViewportID() == 0)
+    {
+        Log::Print("@@@@@ no longer hovering over any viewport...");
+    }
+
     string fps = Examples::Test_Get_FPS(0.5f);
     if (!fps.empty())
     {

@@ -27,6 +27,7 @@ namespace MetalMetropolis::Test
     using KalaGraphics::Resources::Mesh;
     using KalaGraphics::Resources::Transform;
     using KalaGraphics::Resources::Vertex;
+    using KalaGraphics::Resources::Vertex2D;
     using KalaGraphics::Resources::Texture;
     using KalaGraphics::Resources::TextureData;
     using KalaGraphics::Resources::Camera;
@@ -85,6 +86,13 @@ namespace MetalMetropolis::Test
             Texture* texture,
             Transform&& transform = {},
             vector<Vertex>&& vertices = {},
+            vector<u32>&& indices = {}); 
+
+        static Mesh* Test_Create_Mesh(
+            Shader* shader,
+            Texture* texture,
+            Transform&& transform = {},
+            vector<Vertex2D>&& vertices = {},
             vector<u32>&& indices = {}); 
 
         static Camera* Test_Create_Camera(

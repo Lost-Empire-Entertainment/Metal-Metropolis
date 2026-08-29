@@ -351,8 +351,6 @@ namespace MetalMetropolis::Test
                 ? TextureFilterMode::FILTER_LINEAR
                 : TextureFilterMode::FILTER_NEAREST);
 
-            tex->UpdateTextureData();
-
             Log::Print("@@@@@ set texture filter mode to: " 
                 + string(desired ? "linear" : "nearest"));
         }
@@ -505,13 +503,13 @@ namespace MetalMetropolis::Test
         {
             KalaWindowCore::ForceClose(
                 "Game core error",
-                "Failed to initialize test mesh!");
+                "Failed to initialize 3D test mesh!");
         }
 
         mesh->SetVertices(std::move(vertices));
         mesh->SetIndices(std::move(indices));
 
-        Transform3D mt = mesh->GetTransform();
+        Transform3D& mt = mesh->GetTransform();
 
         setpos3d(
             mt,
@@ -529,9 +527,49 @@ namespace MetalMetropolis::Test
             SizeTarget::SIZE_WORLD,
             transform.size);
 
-        mesh->SetTransform(std::move(mt));
+        return mesh;
+    }
 
-        mesh->UpdateMeshData();
+    Mesh* Examples::Test_Create_Mesh(
+        Shader* shader,
+        Texture* texture,
+        Transform&& transform,
+        vector<Vertex2D>&& vertices,
+        vector<u32>&& indices)
+    {
+        //sync ids before generating mesh
+        EngineCore::SyncID();
+
+        Mesh* mesh = Mesh::Initialize(
+            shader->GetID(),
+            texture->GetID());
+        if (!mesh)
+        {
+            KalaWindowCore::ForceClose(
+                "Game core error",
+                "Failed to initialize 2D test mesh!");
+        }
+
+        mesh->SetVertices2D(std::move(vertices));
+        mesh->SetIndices(std::move(indices));
+
+        Transform3D& mt = mesh->GetTransform();
+
+        setpos3d(
+            mt,
+            {},
+            PosTarget::POS_WORLD,
+            transform.pos);
+        setroteuler(
+            mt,
+            {}, 
+            RotTarget::ROT_WORLD,
+            transform.rot);
+        setsize3d(
+            mt,
+            {},
+            SizeTarget::SIZE_WORLD,
+            transform.size);
 
         return mesh;
     }
@@ -555,12 +593,11 @@ namespace MetalMetropolis::Test
             && transform.rot != 0
             && transform.size != 0)
         {
-            Transform3D ct = cam->GetTransform();
+            Transform3D& ct = cam->GetTransform();
+
             ct.pos_world = transform.pos;
             ct.rot_world = toquat(transform.rot);
             ct.size_world = transform.size;
-
-            cam->SetTransform(std::move(ct));
 
             cam->Move({}, {});
         }

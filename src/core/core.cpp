@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include "log_utils.hpp"
+#include "math_utils.hpp"
 
 #include "test/test_examples.hpp"
 
@@ -22,10 +23,11 @@
 #include "resources/kg_mesh.hpp"
 #include "resources/kg_texture.hpp"
 #include "resources/kg_camera.hpp"
-#include "import/kg_import_texture.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
+
+using KalaHeaders::KalaMath::vec3;
 
 using MetalMetropolis::Test::Examples;
 
@@ -37,9 +39,10 @@ using KalaWindow::Core::KalaWindowCore;
 using KalaGraphics::Core::GraphicsContext;
 using KalaGraphics::Core::Viewport;
 using KalaGraphics::Core::ViewportType;
-using KalaGraphics::Core::ViewportStaticSize;
 using KalaGraphics::Core::HitTest;
+using KalaGraphics::Resources::AnchorPosition;
 using KalaGraphics::Resources::Vertex;
+using KalaGraphics::Resources::Vertex2D;
 using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
 using KalaGraphics::Resources::Texture;
@@ -48,7 +51,6 @@ using KalaGraphics::Resources::TextureFilterMode;
 using KalaGraphics::Resources::FALLBACK_TEXTURE;
 using KalaGraphics::Resources::Camera;
 using KalaGraphics::Resources::CameraType;
-using KalaGraphics::Import::ImportTexture;
 
 using std::string;
 using std::filesystem::path;
@@ -62,7 +64,9 @@ static ProcessWindow* pw{};
 static Input* input{};
 
 static Shader* shader3D{};
-static Mesh* mesh{};
+static Shader* shader2D{};
+static Mesh* mesh3D{};
+static Mesh* mesh2D{};
 static Texture* tex{};
 static Camera* cam{};
 
@@ -144,6 +148,14 @@ void ElypsoEngine::Core::Init()
             "Failed to get primary 3D shader from viewport '" + to_string(vp->GetID()) + "'! Reason: " + err);
     }
 
+    err = Shader::GetRegistry().GetContent(vp->GetPrimary2DShaderID(), shader2D);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to get primary 2D shader from viewport '" + to_string(vp->GetID()) + "'! Reason: " + err);
+    }
+
     err = Camera::GetRegistry().GetContent(vp->GetPrimary3DCameraID(), cam);
     if (!err.empty())
     {
@@ -166,20 +178,11 @@ void ElypsoEngine::Core::Init()
 
     Examples::Test_Popup_And_File_Drag(pw);
 
-    /*
-    shader = Examples::Test_Create_Shader(
-        gctx,
-        array<path, 2>{
-            "files/shaders/unlit_vert.spv",
-            "files/shaders/unlit_frag.spv"
-        });
-    */
-
     TextureData tdata =
     {
         .pixelData = vector<u8>(
-                FALLBACK_TEXTURE.begin(), 
-                FALLBACK_TEXTURE.end()),
+            FALLBACK_TEXTURE.begin(), 
+            FALLBACK_TEXTURE.end()),
         .filterMode = TextureFilterMode::FILTER_NEAREST,
         .size = 16
     };
@@ -187,7 +190,11 @@ void ElypsoEngine::Core::Init()
         shader3D,
         std::move(tdata));
 
-    vector<Vertex> vertices =
+    //
+    // CREATE 3D CUBE
+    //
+
+    vector<Vertex> vertices3D =
     {
         //front (+Z)
         {.pos = { -1.0f, -1.0f,  1.0f }, .normal = { 0.0f, 0.0f, 1.0f }, .uv = { 0.0f, 0.0f }},
@@ -226,7 +233,7 @@ void ElypsoEngine::Core::Init()
         {.pos = { -1.0f, -1.0f,  1.0f }, .normal = { 0.0f, -1.0f, 0.0f }, .uv = { 0.0f, 1.0f }},
     };
 
-    vector<u32> indices =
+    vector<u32> indices3D =
     {
         0,   2,   1,   0,   3,   2,   //front
         4,   6,   5,   4,   7,  6,  //back
@@ -236,7 +243,7 @@ void ElypsoEngine::Core::Init()
         20, 22, 21, 20, 23, 22, //bottom
     };
 
-    mesh = Examples::Test_Create_Mesh(
+    mesh3D = Examples::Test_Create_Mesh(
         shader3D,
         tex,
         {
@@ -244,8 +251,56 @@ void ElypsoEngine::Core::Init()
             .rot = {},
             .size = { 1, 1, 1 }
         },
-        vector<Vertex>{vertices},
-        vector<u32>{indices});
+        vector<Vertex>{vertices3D},
+        vector<u32>{indices3D});
+
+    //
+    // CREATE 2D QUAD
+    //
+
+    vector<Vertex2D> vertices2D =
+    {
+        //bottom-left
+        {
+            .pos = { -0.5f, -0.5f },
+            .uv = { 0.0f, 0.0f }
+        },
+
+        //bottom-right
+        {
+            .pos = { 0.5f, -0.5f },
+            .uv = { 1.0f, 0.0f }
+        },
+
+        //top-right
+        {
+            .pos = { 0.5f, 0.5f },
+            .uv = { 1.0f, 1.0f }
+        },
+
+        //top-left
+        {
+            .pos = { -0.5f, 0.5f },
+            .uv = { 0.0f, 1.0f }
+        }
+    };
+
+    vector<u32> indices2D =
+    {
+        0, 2, 1,
+        0, 3, 2
+    };
+
+    mesh2D = Examples::Test_Create_Mesh(
+        shader2D,
+        tex,
+        {
+            .pos = { 0.0f, 0.0f, 0.0f },
+            .rot = {},
+            .size = { 100.0f, 100.0f, 0.0f }
+        },
+        vector<Vertex2D>{vertices2D},
+        vector<u32>{indices2D});
 
     //
     // CREATE SECOND VIEWPORT
@@ -254,7 +309,7 @@ void ElypsoEngine::Core::Init()
     //sync to ensure viewport gets the highest id
     EngineCore::SyncID();
 
-    Viewport* vp2 = Viewport::Initialize(gctx->GetID());
+    vp2 = Viewport::Initialize(gctx->GetID());
 
     //sync to ensure 3D shader gets the highest id
     EngineCore::SyncID();
@@ -321,9 +376,12 @@ void ElypsoEngine::Core::Init()
     vp2->SetSize(250);
     vp2->SetOffset(100);
     vp2->SetBackgroundColor(1);
+    vp2->SetVisibleState(false);
 
-    vp->SetType(ViewportType::VP_CENTER);
-    vp->SetSize(ViewportStaticSize::VP_640_480);
+    vp->SetType(ViewportType::VP_FIT);
+
+    mesh2D->SetViewportAnchorPosition(AnchorPosition::P_TOP_LEFT);
+    mesh2D->SetLocalAnchorPosition(AnchorPosition::P_TOP_LEFT);
 }
 
 void ElypsoEngine::Core::EarlyUpdate()
@@ -338,9 +396,9 @@ void ElypsoEngine::Core::FixedUpdate()
 
 void ElypsoEngine::Core::Update()
 {
+    /*
     static u32 lastVP{};
     Viewport* hoveredVP{};
-    /*
     if (ht->GetViewportID() == 0
         && lastVP != 0)
     {
@@ -358,16 +416,6 @@ void ElypsoEngine::Core::Update()
         }
     }
     */
-
-    string err = Viewport::GetRegistry().GetContent(ht->GetViewportID(), hoveredVP);
-    if (err.empty())
-    {
-        Log::Print("@@@@@ hovering over viewport '" + to_string(hoveredVP->GetID()) + "'...");
-    }
-    else if (ht->GetViewportID() == 0)
-    {
-        Log::Print("@@@@@ no longer hovering over any viewport...");
-    }
 
     string fps = Examples::Test_Get_FPS(0.5f);
     if (!fps.empty())

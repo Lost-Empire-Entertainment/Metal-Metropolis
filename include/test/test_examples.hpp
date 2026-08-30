@@ -12,6 +12,7 @@
 #include "graphics/kw_window.hpp"
 #include "core/kg_context.hpp"
 #include "core/kg_viewport.hpp"
+#include "core/kg_hit_test.hpp"
 #include "resources/kg_shader.hpp"
 #include "resources/kg_mesh.hpp"
 #include "resources/kg_texture.hpp"
@@ -23,11 +24,11 @@ namespace MetalMetropolis::Test
     using KalaWindow::Graphics::ProcessWindow;
     using KalaGraphics::Core::GraphicsContext;
     using KalaGraphics::Core::Viewport;
+    using KalaGraphics::Core::HitTest;
     using KalaGraphics::Resources::Shader;
     using KalaGraphics::Resources::Mesh;
+    using KalaGraphics::Resources::MeshData;
     using KalaGraphics::Resources::Transform;
-    using KalaGraphics::Resources::Vertex;
-    using KalaGraphics::Resources::Vertex2D;
     using KalaGraphics::Resources::Texture;
     using KalaGraphics::Resources::TextureData;
     using KalaGraphics::Resources::Camera;
@@ -67,6 +68,20 @@ namespace MetalMetropolis::Test
 
         static void Test_Camera_Toggle(Input* input);
 
+        static void Test_Mesh_Toggle_Recreate_Target(Input* input);
+
+        static void Test_Mesh_Recreate_Cube_On_Mouse_Actions(
+            Input* input,
+            Mesh* mesh);
+        static void Test_Mesh_Recreate_Pyramid_On_Mouse_Actions(
+            Input* input,
+            Mesh* mesh);
+        static void Test_Mesh_Recreate_Sphere_On_Mouse_Actions(
+            Input* input,
+            Mesh* mesh);
+
+        static void Test_Viewport_And_Mesh_Hover(HitTest* ht);
+
         static void Test_Camera_Move(
             Input* input,
             Camera* cam,
@@ -84,16 +99,8 @@ namespace MetalMetropolis::Test
         static Mesh* Test_Create_Mesh(
             Shader* shader,
             Texture* texture,
-            Transform&& transform = {},
-            vector<Vertex>&& vertices = {},
-            vector<u32>&& indices = {}); 
-
-        static Mesh* Test_Create_Mesh(
-            Shader* shader,
-            Texture* texture,
-            Transform&& transform = {},
-            vector<Vertex2D>&& vertices = {},
-            vector<u32>&& indices = {}); 
+            Transform&& transform,
+            MeshData&& meshData);
 
         static Camera* Test_Create_Camera(
             Shader* shader,

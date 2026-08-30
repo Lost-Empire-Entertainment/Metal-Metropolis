@@ -35,6 +35,7 @@ using KalaHeaders::KalaMath::RotTarget;
 using KalaHeaders::KalaMath::SizeTarget;
 
 using KalaHeaders::KalaKeyStandards::KeyboardButton;
+using KalaHeaders::KalaKeyStandards::MouseButton;
 
 using ElypsoEngine::Core::EngineCore;
 using KalaWindow::Core::KalaWindowCore;
@@ -49,6 +50,11 @@ using KalaWindow::Core::InputCode;
 using KalaGraphics::Core::VSyncState;
 using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
+using KalaGraphics::Resources::FaceDirection;
+using KalaGraphics::Resources::NormalType;
+using KalaGraphics::Resources::Mesh_Cube;
+using KalaGraphics::Resources::Mesh_Pyramid;
+using KalaGraphics::Resources::Mesh_Sphere;
 using KalaGraphics::Resources::TextureFilterMode;
 
 using std::string;
@@ -378,6 +384,193 @@ namespace MetalMetropolis::Test
         }
     }
 
+    static u8 target{};
+    void Examples::Test_Mesh_Toggle_Recreate_Target(Input* input)
+    {
+        if (input->IsMouseButtonDoubleClicked(MouseButton::M_MIDDLE))
+        {
+            target++;
+            if (target > 2) target = 0;
+
+            string targetStr{};
+            if (target == 0) targetStr = "cube";
+            else if (target == 1) targetStr = "pyramid";
+            else if (target == 2) targetStr = "sphere";
+
+            Log::Print("@@@@@ selected target: " + targetStr);
+        }
+    }
+
+    void Examples::Test_Mesh_Recreate_Cube_On_Mouse_Actions(
+        Input* input,
+        Mesh* mesh)
+    {
+        if (mesh->Is2D())
+        {
+            Log::Print(
+                "Cannot recreate mesh '" 
+                + to_string(mesh->GetID()) + "' cube data because it is 2D!");
+
+            return;
+        }
+        if (target != 0) return;
+
+        static Mesh_Cube cubeData{ .edgeCount = 4 };
+
+        if (input->GetScrollwheelDelta() != 0.0f)
+        {
+            if (input->GetScrollwheelDelta() > 0.0f)
+            {
+                if (cubeData.edgeCount == 32) return;
+                ++cubeData.edgeCount;
+            }
+            else if (input->GetScrollwheelDelta() < 0.0f)
+            {
+                if (cubeData.edgeCount == 3) return;
+                --cubeData.edgeCount;
+            }
+
+            mesh->SetMeshData(Mesh::GenerateMeshData(cubeData));
+        }
+
+        if (input->IsMouseButtonDoubleClicked(MouseButton::M_LEFT))
+        {
+            cubeData.faceDir = cubeData.faceDir == FaceDirection::F_IN
+                ? FaceDirection::F_OUT
+                : FaceDirection::F_IN;
+
+            mesh->SetMeshData(Mesh::GenerateMeshData(cubeData));
+        }
+        else if (input->IsMouseButtonDoubleClicked(MouseButton::M_RIGHT))
+        {
+            cubeData.normalType = cubeData.normalType == NormalType::N_FLAT
+                ? NormalType::N_SMOOTH
+                : NormalType::N_FLAT;
+
+            mesh->SetMeshData(Mesh::GenerateMeshData(cubeData));
+        }
+    }
+    void Examples::Test_Mesh_Recreate_Pyramid_On_Mouse_Actions(
+        Input* input,
+        Mesh* mesh)
+    {
+        if (mesh->Is2D())
+        {
+            Log::Print(
+                "Cannot recreate mesh '" 
+                + to_string(mesh->GetID()) + "' pyramid data because it is 2D!");
+
+            return;
+        }
+        if (target != 1) return;
+
+        static Mesh_Pyramid pyramidData{ .edgeCount = 4 };
+
+        if (input->GetScrollwheelDelta() != 0.0f)
+        {
+            if (input->GetScrollwheelDelta() > 0.0f)
+            {
+                if (pyramidData.edgeCount == 32) return;
+                ++pyramidData.edgeCount;
+            }
+            else if (input->GetScrollwheelDelta() < 0.0f)
+            {
+                if (pyramidData.edgeCount == 3) return;
+                --pyramidData.edgeCount;
+            }
+
+            mesh->SetMeshData(Mesh::GenerateMeshData(pyramidData));
+        }
+
+        if (input->IsMouseButtonDoubleClicked(MouseButton::M_LEFT))
+        {
+            pyramidData.faceDir = pyramidData.faceDir == FaceDirection::F_IN
+                ? FaceDirection::F_OUT
+                : FaceDirection::F_IN;
+
+            mesh->SetMeshData(Mesh::GenerateMeshData(pyramidData));
+        }
+        else if (input->IsMouseButtonDoubleClicked(MouseButton::M_RIGHT))
+        {
+            pyramidData.normalType = pyramidData.normalType == NormalType::N_FLAT
+                ? NormalType::N_SMOOTH
+                : NormalType::N_FLAT;
+
+            mesh->SetMeshData(Mesh::GenerateMeshData(pyramidData));
+        }
+    }
+    void Examples::Test_Mesh_Recreate_Sphere_On_Mouse_Actions(
+        Input* input,
+        Mesh* mesh)
+    {
+        if (mesh->Is2D())
+        {
+            Log::Print(
+                "Cannot recreate mesh '" 
+                + to_string(mesh->GetID()) + "' sphere data because it is 2D!");
+
+            return;
+        }
+        if (target != 2) return;
+
+        static Mesh_Sphere sphereData{};
+
+        if (input->GetScrollwheelDelta() != 0.0f)
+        {
+            if (input->GetScrollwheelDelta() > 0.0f)
+            {
+                if (sphereData.detailLevel == 8) return;
+                ++sphereData.detailLevel;
+            }
+            else if (input->GetScrollwheelDelta() < 0.0f)
+            {
+                if (sphereData.detailLevel == 1) return;
+                --sphereData.detailLevel;
+            }
+
+            mesh->SetMeshData(Mesh::GenerateMeshData(sphereData));
+        }
+
+        if (input->IsMouseButtonDoubleClicked(MouseButton::M_LEFT))
+        {
+            sphereData.faceDir = sphereData.faceDir == FaceDirection::F_IN
+                ? FaceDirection::F_OUT
+                : FaceDirection::F_IN;
+
+            mesh->SetMeshData(Mesh::GenerateMeshData(sphereData));
+        }
+        else if (input->IsMouseButtonDoubleClicked(MouseButton::M_RIGHT))
+        {
+            sphereData.normalType = sphereData.normalType == NormalType::N_FLAT
+                ? NormalType::N_SMOOTH
+                : NormalType::N_FLAT;
+
+            mesh->SetMeshData(Mesh::GenerateMeshData(sphereData));
+        }
+    }
+
+    void Examples::Test_Viewport_And_Mesh_Hover(HitTest* ht)
+    {
+        static u32 lastVP{};
+        Viewport* hoveredVP{};
+        if (ht->GetViewportID() == 0
+            && lastVP != 0)
+        {
+            lastVP = 0;
+            Log::Print("@@@@@ no longer hovering over any viewport...");
+        }
+        else if (ht->GetViewportID() != 0)
+        {
+            string err = Viewport::GetRegistry().GetContent(ht->GetViewportID(), hoveredVP);
+            if (err.empty()
+                && lastVP != hoveredVP->GetID())
+            {
+                lastVP = hoveredVP->GetID();
+                Log::Print("@@@@@ hovering over viewport '" + to_string(lastVP) + "'...");
+            }
+        }
+    }
+
     void Examples::Test_Camera_Move(
         Input* input,
         Camera* cam,
@@ -490,8 +683,7 @@ namespace MetalMetropolis::Test
         Shader* shader,
         Texture* texture,
         Transform&& transform,
-        vector<Vertex>&& vertices,
-        vector<u32>&& indices)
+        MeshData&& meshData)
     {
         //sync ids before generating mesh
         EngineCore::SyncID();
@@ -503,55 +695,10 @@ namespace MetalMetropolis::Test
         {
             KalaWindowCore::ForceClose(
                 "Game core error",
-                "Failed to initialize 3D test mesh!");
+                "Failed to initialize test mesh!");
         }
 
-        mesh->SetVertices(std::move(vertices));
-        mesh->SetIndices(std::move(indices));
-
-        Transform3D& mt = mesh->GetTransform();
-
-        setpos3d(
-            mt,
-            {},
-            PosTarget::POS_WORLD,
-            transform.pos);
-        setroteuler(
-            mt,
-            {}, 
-            RotTarget::ROT_WORLD,
-            transform.rot);
-        setsize3d(
-            mt,
-            {},
-            SizeTarget::SIZE_WORLD,
-            transform.size);
-
-        return mesh;
-    }
-
-    Mesh* Examples::Test_Create_Mesh(
-        Shader* shader,
-        Texture* texture,
-        Transform&& transform,
-        vector<Vertex2D>&& vertices,
-        vector<u32>&& indices)
-    {
-        //sync ids before generating mesh
-        EngineCore::SyncID();
-
-        Mesh* mesh = Mesh::Initialize(
-            shader->GetID(),
-            texture->GetID());
-        if (!mesh)
-        {
-            KalaWindowCore::ForceClose(
-                "Game core error",
-                "Failed to initialize 2D test mesh!");
-        }
-
-        mesh->SetVertices2D(std::move(vertices));
-        mesh->SetIndices(std::move(indices));
+        mesh->SetMeshData(std::move(meshData));
 
         Transform3D& mt = mesh->GetTransform();
 

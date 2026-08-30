@@ -28,6 +28,8 @@ using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
 
 using KalaHeaders::KalaMath::vec3;
+using KalaHeaders::KalaMath::getdirfront;
+using KalaHeaders::KalaMath::getdirright;
 
 using MetalMetropolis::Test::Examples;
 
@@ -45,6 +47,10 @@ using KalaGraphics::Resources::Vertex;
 using KalaGraphics::Resources::Vertex2D;
 using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
+using KalaGraphics::Resources::MeshData;
+using KalaGraphics::Resources::Mesh_Cube;
+using KalaGraphics::Resources::Mesh_Pyramid;
+using KalaGraphics::Resources::Mesh_Sphere;
 using KalaGraphics::Resources::Texture;
 using KalaGraphics::Resources::TextureData;
 using KalaGraphics::Resources::TextureFilterMode;
@@ -65,10 +71,14 @@ static Input* input{};
 
 static Shader* shader3D{};
 static Shader* shader2D{};
-static Mesh* mesh3D{};
-static Mesh* mesh2D{};
+
 static Texture* tex{};
-static Camera* cam{};
+static Camera* cam3D{};
+
+static Mesh* mesh3D_cube{};
+static Mesh* mesh3D_pyramid{};
+static Mesh* mesh3D_sphere{};
+static Mesh* mesh2D_rect{};
 
 static path exePath{};
 
@@ -156,15 +166,15 @@ void ElypsoEngine::Core::Init()
             "Failed to get primary 2D shader from viewport '" + to_string(vp->GetID()) + "'! Reason: " + err);
     }
 
-    err = Camera::GetRegistry().GetContent(vp->GetPrimary3DCameraID(), cam);
+    err = Camera::GetRegistry().GetContent(vp->GetPrimary3DCameraID(), cam3D);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
             "Failed to get primary 3D camera from viewport '" + to_string(vp->GetID()) + "'! Reason: " + err);
     }
-    cam->SetSensitivityMultiplier(0.175f);
-    cam->SetSpeedMultiplier(7.5f);
+    cam3D->SetSensitivityMultiplier(0.175f);
+    cam3D->SetSpeedMultiplier(7.5f);
 
     err = Input::GetRegistry().GetContent(pw->GetInputID(), input);
     if (!err.empty())
@@ -194,113 +204,61 @@ void ElypsoEngine::Core::Init()
     // CREATE 3D CUBE
     //
 
-    vector<Vertex> vertices3D =
-    {
-        //front (+Z)
-        {.pos = { -1.0f, -1.0f,  1.0f }, .normal = { 0.0f, 0.0f, 1.0f }, .uv = { 0.0f, 0.0f }},
-        {.pos = {  1.0f, -1.0f,  1.0f }, .normal = { 0.0f, 0.0f, 1.0f }, .uv = { 1.0f, 0.0f }},
-        {.pos = {  1.0f,  1.0f,  1.0f }, .normal = { 0.0f, 0.0f, 1.0f }, .uv = { 1.0f, 1.0f }},
-        {.pos = { -1.0f,  1.0f,  1.0f }, .normal = { 0.0f, 0.0f, 1.0f }, .uv = { 0.0f, 1.0f }},
-
-        //back (-Z)
-        {.pos = {  1.0f, -1.0f, -1.0f }, .normal = { 0.0f, 0.0f, -1.0f }, .uv = { 0.0f, 0.0f }},
-        {.pos = { -1.0f, -1.0f, -1.0f }, .normal = { 0.0f, 0.0f, -1.0f }, .uv = { 1.0f, 0.0f }},
-        {.pos = { -1.0f,  1.0f, -1.0f }, .normal = { 0.0f, 0.0f, -1.0f }, .uv = { 1.0f, 1.0f }},
-        {.pos = {  1.0f,  1.0f, -1.0f }, .normal = { 0.0f, 0.0f, -1.0f }, .uv = { 0.0f, 1.0f }},
-
-        //left (-X)
-        {.pos = { -1.0f, -1.0f, -1.0f }, .normal = { -1.0f, 0.0f, 0.0f }, .uv = { 0.0f, 0.0f }},
-        {.pos = { -1.0f, -1.0f,  1.0f }, .normal = { -1.0f, 0.0f, 0.0f }, .uv = { 1.0f, 0.0f }},
-        {.pos = { -1.0f,  1.0f,  1.0f }, .normal = { -1.0f, 0.0f, 0.0f }, .uv = { 1.0f, 1.0f }},
-        {.pos = { -1.0f,  1.0f, -1.0f }, .normal = { -1.0f, 0.0f, 0.0f }, .uv = { 0.0f, 1.0f }},
-
-        //right (+X)
-        {.pos = {  1.0f, -1.0f,  1.0f }, .normal = { 1.0f, 0.0f, 0.0f }, .uv = { 0.0f, 0.0f }},
-        {.pos = {  1.0f, -1.0f, -1.0f }, .normal = { 1.0f, 0.0f, 0.0f }, .uv = { 1.0f, 0.0f }},
-        {.pos = {  1.0f,  1.0f, -1.0f }, .normal = { 1.0f, 0.0f, 0.0f }, .uv = { 1.0f, 1.0f }},
-        {.pos = {  1.0f,  1.0f,  1.0f }, .normal = { 1.0f, 0.0f, 0.0f }, .uv = { 0.0f, 1.0f }},
-
-        //top (+Y)
-        {.pos = { -1.0f,  1.0f,  1.0f }, .normal = { 0.0f, 1.0f, 0.0f }, .uv = { 0.0f, 0.0f }},
-        {.pos = {  1.0f,  1.0f,  1.0f }, .normal = { 0.0f, 1.0f, 0.0f }, .uv = { 1.0f, 0.0f }},
-        {.pos = {  1.0f,  1.0f, -1.0f }, .normal = { 0.0f, 1.0f, 0.0f }, .uv = { 1.0f, 1.0f }},
-        {.pos = { -1.0f,  1.0f, -1.0f }, .normal = { 0.0f, 1.0f, 0.0f }, .uv = { 0.0f, 1.0f }},
-
-        //bottom (-Y)
-        {.pos = { -1.0f, -1.0f, -1.0f }, .normal = { 0.0f, -1.0f, 0.0f }, .uv = { 0.0f, 0.0f }},
-        {.pos = {  1.0f, -1.0f, -1.0f }, .normal = { 0.0f, -1.0f, 0.0f }, .uv = { 1.0f, 0.0f }},
-        {.pos = {  1.0f, -1.0f,  1.0f }, .normal = { 0.0f, -1.0f, 0.0f }, .uv = { 1.0f, 1.0f }},
-        {.pos = { -1.0f, -1.0f,  1.0f }, .normal = { 0.0f, -1.0f, 0.0f }, .uv = { 0.0f, 1.0f }},
-    };
-
-    vector<u32> indices3D =
-    {
-        0,   2,   1,   0,   3,   2,   //front
-        4,   6,   5,   4,   7,  6,  //back
-        8,  10, 9,  8,  11, 10, //left
-        12, 14, 13, 12, 15, 14, //right
-        16, 18, 17, 16, 19, 18, //top
-        20, 22, 21, 20, 23, 22, //bottom
-    };
-
-    mesh3D = Examples::Test_Create_Mesh(
+    mesh3D_cube = Examples::Test_Create_Mesh(
         shader3D,
         tex,
         {
-            .pos = { 0, 0, 0 },
+            .pos = 
+                getdirfront(cam3D->GetTransform()) * 2.0f 
+                - getdirright(cam3D->GetTransform()) * 2.0f,
             .rot = {},
-            .size = { 1, 1, 1 }
+            .size = 1
         },
-        vector<Vertex>{vertices3D},
-        vector<u32>{indices3D});
+        Mesh::GenerateMeshData(Mesh_Cube{.edgeCount = 4}));
+
+    //
+    // CREATE 3D PYRAMID
+    //
+
+    mesh3D_pyramid = Examples::Test_Create_Mesh(
+        shader3D,
+        tex,
+        {
+            .pos = getdirfront(cam3D->GetTransform()) * 2.0f,
+            .rot = {},
+            .size = 1
+        },
+        Mesh::GenerateMeshData(Mesh_Pyramid{.edgeCount = 4}));
+
+    //
+    // CREATE 3D SPHERE
+    //
+
+    mesh3D_sphere = Examples::Test_Create_Mesh(
+        shader3D,
+        tex,
+        {
+            .pos = 
+                getdirfront(cam3D->GetTransform()) * 2.0f 
+                + getdirright(cam3D->GetTransform()) * 2.0f,
+            .rot = {},
+            .size = 1
+        },
+        Mesh::GenerateMeshData(Mesh_Sphere{}));
 
     //
     // CREATE 2D QUAD
     //
 
-    vector<Vertex2D> vertices2D =
-    {
-        //bottom-left
-        {
-            .pos = { -0.5f, -0.5f },
-            .uv = { 0.0f, 0.0f }
-        },
-
-        //bottom-right
-        {
-            .pos = { 0.5f, -0.5f },
-            .uv = { 1.0f, 0.0f }
-        },
-
-        //top-right
-        {
-            .pos = { 0.5f, 0.5f },
-            .uv = { 1.0f, 1.0f }
-        },
-
-        //top-left
-        {
-            .pos = { -0.5f, 0.5f },
-            .uv = { 0.0f, 1.0f }
-        }
-    };
-
-    vector<u32> indices2D =
-    {
-        0, 2, 1,
-        0, 3, 2
-    };
-
-    mesh2D = Examples::Test_Create_Mesh(
+    mesh2D_rect = Examples::Test_Create_Mesh(
         shader2D,
         tex,
         {
-            .pos = { 0.0f, 0.0f, 0.0f },
+            .pos = {},
             .rot = {},
             .size = { 100.0f, 100.0f, 0.0f }
         },
-        vector<Vertex2D>{vertices2D},
-        vector<u32>{indices2D});
+        Mesh::GenerateMeshData());
 
     //
     // CREATE SECOND VIEWPORT
@@ -380,8 +338,8 @@ void ElypsoEngine::Core::Init()
 
     vp->SetType(ViewportType::VP_FIT);
 
-    mesh2D->SetViewportAnchorPosition(AnchorPosition::P_TOP_LEFT);
-    mesh2D->SetLocalAnchorPosition(AnchorPosition::P_TOP_LEFT);
+    mesh2D_rect->SetViewportAnchorPosition(AnchorPosition::P_TOP_LEFT);
+    mesh2D_rect->SetLocalAnchorPosition(AnchorPosition::P_TOP_LEFT);
 }
 
 void ElypsoEngine::Core::EarlyUpdate()
@@ -396,26 +354,16 @@ void ElypsoEngine::Core::FixedUpdate()
 
 void ElypsoEngine::Core::Update()
 {
-    /*
-    static u32 lastVP{};
-    Viewport* hoveredVP{};
-    if (ht->GetViewportID() == 0
-        && lastVP != 0)
-    {
-        lastVP = 0;
-        Log::Print("@@@@@ no longer hovering over any viewport...");
-    }
-    else if (ht->GetViewportID() != 0)
-    {
-        string err = Viewport::GetRegistry().GetContent(ht->GetViewportID(), hoveredVP);
-        if (err.empty()
-            && lastVP != hoveredVP->GetID())
-        {
-            lastVP = hoveredVP->GetID();
-            Log::Print("@@@@@ hovering over viewport '" + to_string(lastVP) + "'...");
-        }
-    }
-    */
+    Examples::Test_Mesh_Toggle_Recreate_Target(input);
+    Examples::Test_Mesh_Recreate_Cube_On_Mouse_Actions(
+        input,
+        mesh3D_cube);
+    Examples::Test_Mesh_Recreate_Pyramid_On_Mouse_Actions(
+        input,
+        mesh3D_pyramid);
+    Examples::Test_Mesh_Recreate_Sphere_On_Mouse_Actions(
+        input,
+        mesh3D_sphere);
 
     string fps = Examples::Test_Get_FPS(0.5f);
     if (!fps.empty())
@@ -456,7 +404,7 @@ void ElypsoEngine::Core::Update()
 
     Examples::Test_Camera_Move(
         input,
-        cam,
+        cam3D,
         EngineCore::GetDeltaTime());
 }
 

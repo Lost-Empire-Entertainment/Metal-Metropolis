@@ -115,7 +115,7 @@ postbuildaction: xcopy /y /d "${vkdir_win}\\VkLayer_khronos_validation.json" "${
 #profile release-windows
 buildtype: release
 buildpath: "${dir_release}windows"
-customflags: no-console
+//customflags: no-console
 links: ${links_win_rel}, ${links_win_only}, ${links_win_and_win_on_linux}
 postbuildaction: IF EXIST "files\\shaders" rmdir /s /q "files\\shaders"
 postbuildaction: xcopy "..\\..\\external-shared\\KalaGraphics\\files\\shaders\\." "files\\shaders" /e /i /h /y
@@ -149,7 +149,6 @@ postbuildaction: cp "${lib_libgcc}" "${dir_release}windows-gnu"
 postbuildaction: cp "${lib_libstdcpp}" "${dir_release}windows-gnu"
 postbuildaction: cp "${lib_libwinp}" "${dir_release}windows-gnu"
 postbuildaction: strip --strip-unneeded ${dir_release}windows-gnu/${name_bin}.exe
-
 
 #profile debug-linux
 buildtype: debug

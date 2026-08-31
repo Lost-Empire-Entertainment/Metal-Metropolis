@@ -32,7 +32,7 @@ namespace MetalMetropolis::Test
             case AccessViolationType::A_READ:
             {
                 int* crashPtr = nullptr;
-                int _ = *crashPtr;
+                (void)*crashPtr;
             }
             //Attempted to write to invalid memory
             case AccessViolationType::A_WRITE:

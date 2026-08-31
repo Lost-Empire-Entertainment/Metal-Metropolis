@@ -172,7 +172,7 @@ namespace MetalMetropolis::Test
             {
                 if (files.empty())
                 {
-                    PopupResult _ = Window_Global::CreatePopup(
+                    (void)Window_Global::CreatePopup(
                         "File drag result popup",
                         "This popup confirms that no files were dragged on screen!",
                         PopupAction::POPUP_ACTION_OK,
@@ -192,7 +192,7 @@ namespace MetalMetropolis::Test
                         to_string((i32)pos.x) + ", " 
                         + to_string((i32)pos.y);
 
-                    PopupResult _ = Window_Global::CreatePopup(
+                    (void)Window_Global::CreatePopup(
                         "File drag result popup",
                         "This popup confirms that files '" + filesString 
                         + "' were dragged on screen at pos '" + posString + "'!",

@@ -79,8 +79,6 @@ namespace MetalMetropolis::Test
             Input* input,
             Mesh* mesh);
 
-        static void Test_Viewport_And_Mesh_Hover(HitTest* ht);
-
         static void Test_Camera_Move(
             Input* input,
             Camera* cam,

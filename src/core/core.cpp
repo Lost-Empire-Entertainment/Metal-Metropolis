@@ -4,6 +4,7 @@
 //Read LICENSE.md for more information.
 
 #include <filesystem>
+#include <array>
 
 #include "log_utils.hpp"
 #include "math_utils.hpp"
@@ -27,9 +28,13 @@
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
 
+using KalaHeaders::KalaMath::vec4;
 using KalaHeaders::KalaMath::vec3;
 using KalaHeaders::KalaMath::Transform3D;
 using KalaHeaders::KalaMath::Transform2D;
+
+using KalaHeaders::KalaKeyStandards::KeyboardButton;
+using KalaHeaders::KalaKeyStandards::MouseButton;
 
 using MetalMetropolis::Test::Examples;
 
@@ -57,6 +62,9 @@ using KalaGraphics::Resources::CameraType;
 
 using std::string;
 using std::filesystem::path;
+using std::vector;
+using std::array;
+using std::pair;
 
 static GraphicsContext* gctx{};
 static Viewport* vp{};
@@ -75,7 +83,17 @@ static Camera* cam3D{};
 static Mesh* mesh3D_cube{};
 static Mesh* mesh3D_pyramid{};
 static Mesh* mesh3D_sphere{};
-static Mesh* mesh2D_rect{};
+static vector<pair<u8, Mesh*>> rects{};
+
+static constexpr array<vec4, 6> colors
+{{
+    { 1.00f, 1.00f, 1.00f, 1.0f }, //plain white
+    { 1.00f, 0.25f, 0.20f, 1.0f }, //coral red
+    { 0.20f, 0.75f, 1.00f, 1.0f }, //sky blue
+    { 0.35f, 1.00f, 0.40f, 1.0f }, //lime green
+    { 0.85f, 0.30f, 1.00f, 1.0f }, //vivid purple
+    { 1.00f, 0.75f, 0.15f, 1.0f }  //golden yellow
+}};
 
 static path exePath{};
 
@@ -238,16 +256,30 @@ void ElypsoEngine::Core::Init()
         + c3t.getdirright() * 2.0f);
 
     //
-    // CREATE 2D QUAD
+    // CREATE 2D QUADS
     //
 
-    mesh2D_rect = Examples::Test_Create_Mesh(
-        shader2D,
-        tex,
-        Mesh::GenerateMeshData());
+    vec2 pos{};
+    for (int i = 0; i < 5; ++i)
+    {
+        rects.push_back(
+        {
+            0,
+            Examples::Test_Create_Mesh(
+            shader2D,
+            tex,
+            Mesh::GenerateMeshData())
+        });
 
-    scast<Transform2D&>(mesh2D_rect->GetTransform()).setsize(
-        vec2{ 100.0f, 100.0f });
+        rects[i].second->SetViewportAnchorPosition(AnchorPosition::P_TOP_LEFT);
+        rects[i].second->SetLocalAnchorPosition(AnchorPosition::P_TOP_LEFT);
+
+        Transform2D& t = rects[i].second->GetTransform();
+        t.setsize(vec2{ 50.0f, 20.0f });
+        t.addpos(pos);
+
+        pos.x += 75.0f;
+    }
 
     //
     // CREATE SECOND VIEWPORT
@@ -321,14 +353,49 @@ void ElypsoEngine::Core::Init()
     vp2->SetDynamicResizeState(false);
     vp2->SetType(ViewportType::VP_FILL);
     vp2->SetSize(250);
-    vp2->SetOffset(100);
+    vp2->SetOffset(0);
     vp2->SetBackgroundColor(1);
     vp2->SetVisibleState(false);
 
     vp->SetType(ViewportType::VP_FIT);
 
-    mesh2D_rect->SetViewportAnchorPosition(AnchorPosition::P_TOP_LEFT);
-    mesh2D_rect->SetLocalAnchorPosition(AnchorPosition::P_TOP_LEFT);
+    for (size_t i = 0; i < rects.size(); i++)
+    {
+        Mesh* m = rects[i].second;
+
+        m->SetMouseButtonPressedCallback(
+            MouseButton::M_LEFT,
+            [m, i]()
+            {
+                ++rects[i].first;
+                if (rects[i].first == colors.size()) rects[i].first = 0;
+                m->SetColor(vec4{colors[rects[i].first]});
+                
+                Log::Print("@@@@@ pressed lmb over 2D mesh '" + to_string(m->GetID()) + "'..."); 
+            });
+
+        m->SetOnHoverStartCallback([m]() 
+            {
+                scast<Transform2D&>(m->GetTransform()).addsize(10);
+
+                Log::Print("@@@@@ started hovering over 2D mesh '" + to_string(m->GetID()) + "'..."); 
+            });
+
+        m->SetOnHoverExitCallback([m]() 
+            { 
+                scast<Transform2D&>(m->GetTransform()).addsize(-10);
+
+                Log::Print("@@@@@ stopped hovering over 2D mesh '" + to_string(m->GetID()) + "'..."); 
+            });
+    }
+
+    mesh3D_cube->SetKeyHeldCallback(
+        KeyboardButton::K_SPACE,
+        []() 
+        {
+            scast<Transform3D&>(mesh3D_cube->GetTransform()).addpos({0.0f, 0.05f, 0.0f});
+        },
+        false);
 }
 
 void ElypsoEngine::Core::EarlyUpdate()
@@ -343,6 +410,8 @@ void ElypsoEngine::Core::FixedUpdate()
 
 void ElypsoEngine::Core::Update()
 {
+    //Examples::Test_Viewport_And_Mesh_Hover(ht);
+
     Examples::Test_Mesh_Toggle_Recreate_Target(input);
     Examples::Test_Mesh_Recreate_Cube_On_Mouse_Actions(
         input,

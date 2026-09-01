@@ -541,28 +541,6 @@ namespace MetalMetropolis::Test
         }
     }
 
-    void Examples::Test_Viewport_And_Mesh_Hover(HitTest* ht)
-    {
-        static u32 lastVP{};
-        Viewport* hoveredVP{};
-        if (ht->GetViewportID() == 0
-            && lastVP != 0)
-        {
-            lastVP = 0;
-            Log::Print("@@@@@ no longer hovering over any viewport...");
-        }
-        else if (ht->GetViewportID() != 0)
-        {
-            string err = Viewport::GetRegistry().GetContent(ht->GetViewportID(), hoveredVP);
-            if (err.empty()
-                && lastVP != hoveredVP->GetID())
-            {
-                lastVP = hoveredVP->GetID();
-                Log::Print("@@@@@ hovering over viewport '" + to_string(lastVP) + "'...");
-            }
-        }
-    }
-
     void Examples::Test_Camera_Move(
         Input* input,
         Camera* cam,

@@ -28,8 +28,8 @@ using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
 
 using KalaHeaders::KalaMath::vec3;
-using KalaHeaders::KalaMath::getdirfront;
-using KalaHeaders::KalaMath::getdirright;
+using KalaHeaders::KalaMath::epsilon;
+using KalaHeaders::KalaMath::Transform3D;
 
 using MetalMetropolis::Test::Examples;
 
@@ -173,6 +173,8 @@ void ElypsoEngine::Core::Init()
     cam3D->SetSensitivityMultiplier(0.175f);
     cam3D->SetSpeedMultiplier(7.5f);
 
+    Transform3D& c3t = cam3D->GetTransform();
+
     err = Input::GetRegistry().GetContent(pw->GetInputID(), input);
     if (!err.empty())
     {
@@ -204,14 +206,12 @@ void ElypsoEngine::Core::Init()
     mesh3D_cube = Examples::Test_Create_Mesh(
         shader3D,
         tex,
-        {
-            .pos = 
-                getdirfront(cam3D->GetTransform()) * 2.0f 
-                - getdirright(cam3D->GetTransform()) * 2.0f,
-            .rot = {},
-            .size = 1
-        },
         Mesh::GenerateMeshData(Mesh_Cube{.edgeCount = 4}));
+
+    Transform3D& m3ct = mesh3D_cube->GetTransform();
+    m3ct.setpos(
+        c3t.getdirfront() * 2.0f 
+        - c3t.getdirright() * 2.0f);
 
     //
     // CREATE 3D PYRAMID
@@ -220,12 +220,10 @@ void ElypsoEngine::Core::Init()
     mesh3D_pyramid = Examples::Test_Create_Mesh(
         shader3D,
         tex,
-        {
-            .pos = getdirfront(cam3D->GetTransform()) * 2.0f,
-            .rot = {},
-            .size = 1
-        },
         Mesh::GenerateMeshData(Mesh_Pyramid{.edgeCount = 4}));
+
+    Transform3D& m3pt = mesh3D_pyramid->GetTransform();
+    m3pt.setpos(c3t.getdirfront() * 2.0f);
 
     //
     // CREATE 3D SPHERE
@@ -234,14 +232,12 @@ void ElypsoEngine::Core::Init()
     mesh3D_sphere = Examples::Test_Create_Mesh(
         shader3D,
         tex,
-        {
-            .pos = 
-                getdirfront(cam3D->GetTransform()) * 2.0f 
-                + getdirright(cam3D->GetTransform()) * 2.0f,
-            .rot = {},
-            .size = 1
-        },
         Mesh::GenerateMeshData(Mesh_Sphere{}));
+
+    Transform3D& m3st = mesh3D_sphere->GetTransform();
+    m3st.setpos(
+        c3t.getdirfront() * 2.0f 
+        + c3t.getdirright() * 2.0f);
 
     //
     // CREATE 2D QUAD
@@ -250,12 +246,10 @@ void ElypsoEngine::Core::Init()
     mesh2D_rect = Examples::Test_Create_Mesh(
         shader2D,
         tex,
-        {
-            .pos = {},
-            .rot = {},
-            .size = { 100.0f, 100.0f, 0.0f }
-        },
         Mesh::GenerateMeshData());
+
+    Transform3D& m2rt = mesh2D_rect->GetTransform();
+    m2rt.setsize({ 100.0f, 100.0f, epsilon });
 
     //
     // CREATE SECOND VIEWPORT

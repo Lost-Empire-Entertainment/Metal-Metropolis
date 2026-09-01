@@ -24,15 +24,8 @@
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
 
-using KalaHeaders::KalaMath::Transform3D;
 using KalaHeaders::KalaMath::vec2;
 using KalaHeaders::KalaMath::vec3;
-using KalaHeaders::KalaMath::setpos3d;
-using KalaHeaders::KalaMath::setroteuler;
-using KalaHeaders::KalaMath::setsize3d;
-using KalaHeaders::KalaMath::PosTarget;
-using KalaHeaders::KalaMath::RotTarget;
-using KalaHeaders::KalaMath::SizeTarget;
 
 using KalaHeaders::KalaKeyStandards::KeyboardButton;
 using KalaHeaders::KalaKeyStandards::MouseButton;
@@ -44,7 +37,6 @@ using KalaWindow::Graphics::SoundType;
 using KalaWindow::Graphics::FileType;
 using KalaWindow::Graphics::PopupAction;
 using KalaWindow::Graphics::PopupType;
-using KalaWindow::Graphics::PopupResult;
 using KalaWindow::Graphics::WindowMode;
 using KalaWindow::Core::InputCode;
 using KalaGraphics::Core::VSyncState;
@@ -682,7 +674,6 @@ namespace MetalMetropolis::Test
     Mesh* Examples::Test_Create_Mesh(
         Shader* shader,
         Texture* texture,
-        Transform&& transform,
         MeshData&& meshData)
     {
         //sync ids before generating mesh
@@ -700,30 +691,10 @@ namespace MetalMetropolis::Test
 
         mesh->SetMeshData(std::move(meshData));
 
-        Transform3D& mt = mesh->GetTransform();
-
-        setpos3d(
-            mt,
-            {},
-            PosTarget::POS_WORLD,
-            transform.pos);
-        setroteuler(
-            mt,
-            {}, 
-            RotTarget::ROT_WORLD,
-            transform.rot);
-        setsize3d(
-            mt,
-            {},
-            SizeTarget::SIZE_WORLD,
-            transform.size);
-
         return mesh;
     }
 
-    Camera* Examples::Test_Create_Camera(
-        Shader* shader,
-        Transform&& transform)
+    Camera* Examples::Test_Create_Camera(Shader* shader)
     {
         //sync ids before generating camera
         EngineCore::SyncID();
@@ -734,19 +705,6 @@ namespace MetalMetropolis::Test
             KalaWindowCore::ForceClose(
                 "Game core error",
                 "Failed to initialize test camera!");
-        }
-
-        if (transform.pos != 0
-            && transform.rot != 0
-            && transform.size != 0)
-        {
-            Transform3D& ct = cam->GetTransform();
-
-            ct.pos_world = transform.pos;
-            ct.rot_world = toquat(transform.rot);
-            ct.size_world = transform.size;
-
-            cam->Move({}, {});
         }
 
         return cam;

@@ -28,7 +28,6 @@ namespace MetalMetropolis::Test
     using KalaGraphics::Resources::Shader;
     using KalaGraphics::Resources::Mesh;
     using KalaGraphics::Resources::MeshData;
-    using KalaGraphics::Resources::Transform;
     using KalaGraphics::Resources::Texture;
     using KalaGraphics::Resources::TextureData;
     using KalaGraphics::Resources::Camera;
@@ -99,11 +98,8 @@ namespace MetalMetropolis::Test
         static Mesh* Test_Create_Mesh(
             Shader* shader,
             Texture* texture,
-            Transform&& transform,
             MeshData&& meshData);
 
-        static Camera* Test_Create_Camera(
-            Shader* shader,
-            Transform&& transform = {});
+        static Camera* Test_Create_Camera(Shader* shader);
     };
 }

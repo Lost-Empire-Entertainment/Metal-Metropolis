@@ -28,8 +28,8 @@ using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
 
 using KalaHeaders::KalaMath::vec3;
-using KalaHeaders::KalaMath::epsilon;
 using KalaHeaders::KalaMath::Transform3D;
+using KalaHeaders::KalaMath::Transform2D;
 
 using MetalMetropolis::Test::Examples;
 
@@ -208,8 +208,7 @@ void ElypsoEngine::Core::Init()
         tex,
         Mesh::GenerateMeshData(Mesh_Cube{.edgeCount = 4}));
 
-    Transform3D& m3ct = mesh3D_cube->GetTransform();
-    m3ct.setpos(
+    scast<Transform3D&>(mesh3D_cube->GetTransform()).setpos(
         c3t.getdirfront() * 2.0f 
         - c3t.getdirright() * 2.0f);
 
@@ -222,8 +221,8 @@ void ElypsoEngine::Core::Init()
         tex,
         Mesh::GenerateMeshData(Mesh_Pyramid{.edgeCount = 4}));
 
-    Transform3D& m3pt = mesh3D_pyramid->GetTransform();
-    m3pt.setpos(c3t.getdirfront() * 2.0f);
+    scast<Transform3D&>(mesh3D_pyramid->GetTransform()).setpos(
+        c3t.getdirfront() * 2.0f);
 
     //
     // CREATE 3D SPHERE
@@ -234,8 +233,7 @@ void ElypsoEngine::Core::Init()
         tex,
         Mesh::GenerateMeshData(Mesh_Sphere{}));
 
-    Transform3D& m3st = mesh3D_sphere->GetTransform();
-    m3st.setpos(
+    scast<Transform3D&>(mesh3D_sphere->GetTransform()).setpos(
         c3t.getdirfront() * 2.0f 
         + c3t.getdirright() * 2.0f);
 
@@ -248,8 +246,8 @@ void ElypsoEngine::Core::Init()
         tex,
         Mesh::GenerateMeshData());
 
-    Transform3D& m2rt = mesh2D_rect->GetTransform();
-    m2rt.setsize({ 100.0f, 100.0f, epsilon });
+    scast<Transform2D&>(mesh2D_rect->GetTransform()).setsize(
+        vec2{ 100.0f, 100.0f });
 
     //
     // CREATE SECOND VIEWPORT

@@ -398,11 +398,70 @@ void ElypsoEngine::Core::Init()
             });
     }
 
+    /*
     mesh3D_cube->SetKeyHeldCallback(
         KeyboardButton::K_SPACE,
         []() 
         {
             scast<Transform3D&>(mesh3D_cube->GetTransform()).addpos({0.0f, 0.05f, 0.0f});
+        },
+        false);
+    */
+
+    mesh3D_cube->SetKeyPressedCallback(
+        KeyboardButton::K_1,
+        []() 
+        {
+            mesh3D_cube->SetTransparentState(!mesh3D_cube->IsTransparent());
+        },
+        false);
+    mesh3D_cube->SetKeyPressedCallback(
+        KeyboardButton::K_2,
+        []() 
+        {
+            static u8 colorIndex{};
+
+            ++colorIndex;
+            if (colorIndex == colors.size()) colorIndex = 0;
+            mesh3D_cube->SetColor(vec4{colors[colorIndex]});
+        },
+        false);
+
+    mesh3D_pyramid->SetKeyPressedCallback(
+        KeyboardButton::K_3,
+        []() 
+        {
+            mesh3D_pyramid->SetTransparentState(!mesh3D_pyramid->IsTransparent());
+        },
+        false);
+    mesh3D_pyramid->SetKeyPressedCallback(
+        KeyboardButton::K_4,
+        []() 
+        {
+            static u8 colorIndex{};
+
+            ++colorIndex;
+            if (colorIndex == colors.size()) colorIndex = 0;
+            mesh3D_pyramid->SetColor(vec4{colors[colorIndex]});
+        },
+        false);
+
+    mesh3D_sphere->SetKeyPressedCallback(
+        KeyboardButton::K_5,
+        []() 
+        {
+            mesh3D_sphere->SetTransparentState(!mesh3D_sphere->IsTransparent());
+        },
+        false);
+    mesh3D_sphere->SetKeyPressedCallback(
+        KeyboardButton::K_6,
+        []() 
+        {
+            static u8 colorIndex{};
+
+            ++colorIndex;
+            if (colorIndex == colors.size()) colorIndex = 0;
+            mesh3D_sphere->SetColor(vec4{colors[colorIndex]});
         },
         false);
 }
@@ -461,8 +520,7 @@ void ElypsoEngine::Core::Update()
         cam3D,
         EngineCore::GetDeltaTime());
 
-    //Examples::Test_Viewport_And_Mesh_Hover(ht);
-
+    /*
     Examples::Test_Mesh_Toggle_Recreate_Target(input);
     Examples::Test_Mesh_Recreate_Cube_On_Mouse_Actions(
         input,
@@ -473,6 +531,7 @@ void ElypsoEngine::Core::Update()
     Examples::Test_Mesh_Recreate_Sphere_On_Mouse_Actions(
         input,
         mesh3D_sphere);
+    */
 }
 
 void ElypsoEngine::Core::LateUpdate()

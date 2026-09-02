@@ -146,16 +146,32 @@ namespace MetalMetropolis::Test
     {
         if (!fpsState) return "";
 
-        static f64 cachedFPS = EngineCore::GetCurrentFPS();
+        static f64 cachedFPS = EngineCore::GetAverageFPS();
+        static f64 cachedFrameLength = EngineCore::GetAverageFrameLength();
+        static f64 cachedOnePercentFPS = EngineCore::GetOnePercentLowFPS();
+        static f64 cachedZeroOnePercentFPS = EngineCore::GetZeroPointOnePercentLowFPS();
+
         static time_point start = steady_clock::now();
 
         if (steady_clock::now() - start > duration<f64>(secondsToWait))
         {
-            cachedFPS = EngineCore::GetCurrentFPS();
+            cachedFPS = EngineCore::GetAverageFPS();
+            cachedFrameLength = EngineCore::GetAverageFrameLength();
+            cachedOnePercentFPS = EngineCore::GetOnePercentLowFPS();
+            cachedZeroOnePercentFPS = EngineCore::GetZeroPointOnePercentLowFPS();
+
             start = steady_clock::now();
         }
         
-        return format("{:.2f}", cachedFPS);
+        return format(
+            "\nAverage: {:.2f} fps,"
+            "\nframe length: {:.2f}ms,"
+            "\n1% low: {:.2f} fps,"
+            "\n0.1% low: {:.2f} fps",
+            cachedFPS,
+            cachedFrameLength,
+            cachedOnePercentFPS,
+            cachedZeroOnePercentFPS);
     }
 
     void Examples::Test_Popup_And_File_Drag(ProcessWindow* pw)

@@ -419,24 +419,11 @@ void ElypsoEngine::Core::FixedUpdate()
 
 void ElypsoEngine::Core::Update()
 {
-    //Examples::Test_Viewport_And_Mesh_Hover(ht);
-
-    Examples::Test_Mesh_Toggle_Recreate_Target(input);
-    Examples::Test_Mesh_Recreate_Cube_On_Mouse_Actions(
-        input,
-        mesh3D_cube);
-    Examples::Test_Mesh_Recreate_Pyramid_On_Mouse_Actions(
-        input,
-        mesh3D_pyramid);
-    Examples::Test_Mesh_Recreate_Sphere_On_Mouse_Actions(
-        input,
-        mesh3D_sphere);
-
     string fps = Examples::Test_Get_FPS(0.5f);
     if (!fps.empty())
     {
         Log::Print(
-            "FPS: " + fps,
+            fps,
             "GAME_CORE",
             LogType::LOG_INFO);
     }
@@ -473,6 +460,19 @@ void ElypsoEngine::Core::Update()
         input,
         cam3D,
         EngineCore::GetDeltaTime());
+
+    //Examples::Test_Viewport_And_Mesh_Hover(ht);
+
+    Examples::Test_Mesh_Toggle_Recreate_Target(input);
+    Examples::Test_Mesh_Recreate_Cube_On_Mouse_Actions(
+        input,
+        mesh3D_cube);
+    Examples::Test_Mesh_Recreate_Pyramid_On_Mouse_Actions(
+        input,
+        mesh3D_pyramid);
+    Examples::Test_Mesh_Recreate_Sphere_On_Mouse_Actions(
+        input,
+        mesh3D_sphere);
 }
 
 void ElypsoEngine::Core::LateUpdate()

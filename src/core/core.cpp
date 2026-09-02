@@ -88,11 +88,11 @@ static vector<pair<u8, Mesh*>> rects{};
 static constexpr array<vec4, 6> colors
 {{
     { 1.00f, 1.00f, 1.00f, 1.0f }, //plain white
-    { 1.00f, 0.25f, 0.20f, 1.0f }, //coral red
+    { 1.00f, 0.25f, 0.20f, 0.5f }, //coral red
     { 0.20f, 0.75f, 1.00f, 1.0f }, //sky blue
-    { 0.35f, 1.00f, 0.40f, 1.0f }, //lime green
+    { 0.35f, 1.00f, 0.40f, 0.25f }, //lime green
     { 0.85f, 0.30f, 1.00f, 1.0f }, //vivid purple
-    { 1.00f, 0.75f, 0.15f, 1.0f }  //golden yellow
+    { 1.00f, 0.75f, 0.15f, 0.75f }  //golden yellow
 }};
 
 static path exePath{};
@@ -268,7 +268,7 @@ void ElypsoEngine::Core::Init()
             Examples::Test_Create_Mesh(
             shader2D,
             tex,
-            Mesh::GenerateMeshData())
+            {})
         });
 
         rects[i].second->SetViewportAnchorPosition(AnchorPosition::P_TOP_LEFT);
@@ -372,6 +372,15 @@ void ElypsoEngine::Core::Init()
                 m->SetColor(vec4{colors[rects[i].first]});
                 
                 Log::Print("@@@@@ pressed lmb over 2D mesh '" + to_string(m->GetID()) + "'..."); 
+            });
+
+        m->SetMouseButtonPressedCallback(
+            MouseButton::M_RIGHT,
+            [m]()
+            {
+                m->SetTransparentState(!m->IsTransparent());
+                
+                Log::Print("@@@@@ pressed rmb over 2D mesh '" + to_string(m->GetID()) + "'..."); 
             });
 
         m->SetOnHoverStartCallback([m]() 

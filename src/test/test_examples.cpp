@@ -667,7 +667,7 @@ namespace MetalMetropolis::Test
                 "Failed to initialize test mesh!");
         }
 
-        mesh->SetMeshData(std::move(meshData));
+        if (!mesh->Is2D()) mesh->SetMeshData(std::move(meshData));
 
         return mesh;
     }

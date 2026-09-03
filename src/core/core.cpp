@@ -20,10 +20,11 @@
 #include "core/kg_context.hpp"
 #include "core/kg_viewport.hpp"
 #include "core/kg_hit_test.hpp"
-#include "resources/kg_shader.hpp"
+#include "core/kg_shader.hpp"
 #include "resources/kg_mesh.hpp"
 #include "resources/kg_texture.hpp"
 #include "resources/kg_camera.hpp"
+#include "import/kg_import_font.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -46,19 +47,21 @@ using KalaWindow::Core::KalaWindowCore;
 using KalaGraphics::Core::GraphicsContext;
 using KalaGraphics::Core::Viewport;
 using KalaGraphics::Core::ViewportType;
+using KalaGraphics::Core::Shader;
 using KalaGraphics::Core::HitTest;
 using KalaGraphics::Resources::AnchorPosition;
-using KalaGraphics::Resources::Shader;
 using KalaGraphics::Resources::Mesh;
 using KalaGraphics::Resources::Mesh_Cube;
 using KalaGraphics::Resources::Mesh_Pyramid;
 using KalaGraphics::Resources::Mesh_Sphere;
 using KalaGraphics::Resources::Texture;
 using KalaGraphics::Resources::TextureData;
+using KalaGraphics::Resources::TexturePixelFormat;
 using KalaGraphics::Resources::TextureFilterMode;
 using KalaGraphics::Resources::FALLBACK_TEXTURE;
 using KalaGraphics::Resources::Camera;
 using KalaGraphics::Resources::CameraType;
+using KalaGraphics::Import::ImportFont;
 
 using std::string;
 using std::filesystem::path;
@@ -84,6 +87,11 @@ static Mesh* mesh3D_cube{};
 static Mesh* mesh3D_pyramid{};
 static Mesh* mesh3D_sphere{};
 static vector<pair<u8, Mesh*>> rects{};
+
+static Mesh* glyphMesh{};
+static Texture* glyphTexture{};
+
+static ImportFont* impf{};
 
 static constexpr array<vec4, 6> colors
 {{
@@ -282,6 +290,26 @@ void ElypsoEngine::Core::Init()
     }
 
     //
+    // CREATE GLYPH MESH
+    //
+
+    glyphTexture = Texture::Initialize(
+        shader2D->GetID(),
+        { 
+            .format = TexturePixelFormat::FORMAT_BASIC_R8,
+            .filterMode = TextureFilterMode::FILTER_NEAREST
+        });
+
+    glyphMesh = Examples::Test_Create_Mesh(
+        shader2D,
+        glyphTexture,
+        {});
+
+    scast<Transform2D&>(glyphMesh->GetTransform()).setsize(50);
+    glyphMesh->SetViewportAnchorPosition(AnchorPosition::P_TOP_RIGHT);
+    glyphMesh->SetLocalAnchorPosition(AnchorPosition::P_TOP_RIGHT);
+
+    //
     // CREATE SECOND VIEWPORT
     //
 
@@ -464,6 +492,23 @@ void ElypsoEngine::Core::Init()
             mesh3D_sphere->SetColor(vec4{colors[colorIndex]});
         },
         false);
+
+    string fontName = "LeagueGothic-Regular.otf";
+    impf = ImportFont::Initialize(
+        path(exePath.parent_path() / "files" / "fonts" / fontName),
+        32);
+
+    if (!impf)
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to import font '" + fontName + "'!");
+    }
+
+    Examples::Test_Print_Glyph_Atlas_To_Texture(
+        impf,
+        glyphTexture,
+        glyphMesh);
 }
 
 void ElypsoEngine::Core::EarlyUpdate()
@@ -532,6 +577,20 @@ void ElypsoEngine::Core::Update()
         input,
         mesh3D_sphere);
     */
+
+    Examples::Test_Toggle_From_Atlas_State(input);
+
+    /*
+    Examples::Test_Print_Glyph_To_Console(
+        input,
+        impf);
+    */
+
+    Examples::Test_Print_Glyph_To_Texture(
+        input,
+        impf,
+        glyphTexture,
+        glyphMesh);
 }
 
 void ElypsoEngine::Core::LateUpdate()

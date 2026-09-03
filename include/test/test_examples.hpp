@@ -13,10 +13,11 @@
 #include "core/kg_context.hpp"
 #include "core/kg_viewport.hpp"
 #include "core/kg_hit_test.hpp"
-#include "resources/kg_shader.hpp"
+#include "core/kg_shader.hpp"
 #include "resources/kg_mesh.hpp"
 #include "resources/kg_texture.hpp"
 #include "resources/kg_camera.hpp"
+#include "import/kg_import_font.hpp"
 
 namespace MetalMetropolis::Test
 {
@@ -25,12 +26,13 @@ namespace MetalMetropolis::Test
     using KalaGraphics::Core::GraphicsContext;
     using KalaGraphics::Core::Viewport;
     using KalaGraphics::Core::HitTest;
-    using KalaGraphics::Resources::Shader;
+    using KalaGraphics::Core::Shader;
     using KalaGraphics::Resources::Mesh;
     using KalaGraphics::Resources::MeshData;
     using KalaGraphics::Resources::Texture;
     using KalaGraphics::Resources::TextureData;
     using KalaGraphics::Resources::Camera;
+    using KalaGraphics::Import::ImportFont;
 
     using std::array;
     using std::vector;
@@ -66,6 +68,20 @@ namespace MetalMetropolis::Test
             Texture* tex);
 
         static void Test_Camera_Toggle(Input* input);
+
+        static void Test_Toggle_From_Atlas_State(Input* input);
+        static void Test_Print_Glyph_To_Console(
+            Input* input,
+            ImportFont* impf);
+        static void Test_Print_Glyph_To_Texture(
+            Input* input,
+            ImportFont* impf,
+            Texture* glyphTexture,
+            Mesh* glyphMesh);
+        static void Test_Print_Glyph_Atlas_To_Texture(
+            ImportFont* impf,
+            Texture* glyphTexture,
+            Mesh* glyphMesh);
 
         static void Test_Mesh_Toggle_Recreate_Target(Input* input);
 

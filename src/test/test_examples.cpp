@@ -11,24 +11,28 @@
 
 #include "log_utils.hpp"
 #include "math_utils.hpp"
+#include "string_utils.hpp"
 #include "key_standards.hpp"
 
 #include "test/test_examples.hpp"
 #include "core/ee_core.hpp"
-#include "core/kg_context.hpp"
 #include "core/kw_core.hpp"
 #include "graphics/kw_window_global.hpp"
-#include "resources/kg_shader.hpp"
-#include "resources/kg_mesh.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
 
 using KalaHeaders::KalaMath::vec2;
 using KalaHeaders::KalaMath::vec3;
+using KalaHeaders::KalaMath::Transform2D;
+
+using KalaHeaders::KalaString::IsAlpha;
+using KalaHeaders::KalaString::IsNumber;
 
 using KalaHeaders::KalaKeyStandards::KeyboardButton;
 using KalaHeaders::KalaKeyStandards::MouseButton;
+using KalaHeaders::KalaKeyStandards::GetUTFByKey;
+using KalaHeaders::KalaKeyStandards::GetValueByUTF;
 
 using ElypsoEngine::Core::EngineCore;
 using KalaWindow::Core::KalaWindowCore;
@@ -40,14 +44,14 @@ using KalaWindow::Graphics::PopupType;
 using KalaWindow::Graphics::WindowMode;
 using KalaWindow::Core::InputCode;
 using KalaGraphics::Core::VSyncState;
-using KalaGraphics::Resources::Shader;
-using KalaGraphics::Resources::Mesh;
 using KalaGraphics::Resources::FaceDirection;
 using KalaGraphics::Resources::NormalType;
 using KalaGraphics::Resources::Mesh_Cube;
 using KalaGraphics::Resources::Mesh_Pyramid;
 using KalaGraphics::Resources::Mesh_Sphere;
 using KalaGraphics::Resources::TextureFilterMode;
+using KalaGraphics::Import::FontData;
+using KalaGraphics::Import::GlyphData;
 
 using std::string;
 using std::to_string;
@@ -62,6 +66,8 @@ using std::filesystem::path;
 
 static bool fpsState{};
 static bool isCameraMovable{};
+
+static bool fromAtlasState{};
 
 static constexpr InputCode combo_vsync_disable[] =
 {
@@ -390,6 +396,95 @@ namespace MetalMetropolis::Test
             Log::Print("@@@@@ set cam move state to: " 
                 + string(isCameraMovable ? "on" : "off"));
         }
+    }
+
+    void Examples::Test_Toggle_From_Atlas_State(Input* input)
+    {
+        if (input->IsKeyPressed(KeyboardButton::K_BACKSPACE))
+        {
+            fromAtlasState = !fromAtlasState;
+            string state = fromAtlasState ? "true" : "false";
+
+            Log::Print("@@@@@ set fromAtlas state to '" + state + "'");
+        }
+    }
+    void Examples::Test_Print_Glyph_To_Console(
+        Input* input,
+        ImportFont* impf)
+    {
+        if (!input->GetPressedKeys().empty())
+        {
+            u32 keycode = GetUTFByKey(scast<u32>(input->GetPressedKeys().front()));
+
+            char keyvalue = GetValueByUTF(keycode)[0];
+            if (!IsAlpha(keyvalue)
+                && !IsNumber(keyvalue))
+            {
+                return;
+            }
+
+            Log::Print("@@@@@ key code: " + to_string(keycode));
+
+            impf->DrawGlyphToConsole(keycode);
+        }
+    }
+    void Examples::Test_Print_Glyph_To_Texture(
+        Input* input,
+        ImportFont* impf,
+        Texture* glyphTexture,
+        Mesh* glyphMesh)
+    {
+        if (!input->GetPressedKeys().empty())
+        {
+            u32 keycode = GetUTFByKey(scast<u32>(input->GetPressedKeys().front()));
+            
+            char keyvalue = GetValueByUTF(keycode)[0];
+            if (!IsAlpha(keyvalue)
+                && !IsNumber(keyvalue))
+            {
+                return;
+            }
+
+            Log::Print("@@@@@ key code: " + to_string(keycode));
+
+            vector<u8> glyphPixelData = impf->GetGlyphPixelData(
+                keycode,
+                fromAtlasState);
+
+            if (!glyphPixelData.empty()) 
+            {
+                GlyphData& glyphData = impf->GetGlyphData(
+                    impf->GetFontData(),
+                    keycode);
+
+                vec2 finalSize = 
+                {
+                    fabsf(glyphData.size.x),
+                    fabsf(glyphData.size.y)
+                };
+
+                glyphTexture->SetSize(finalSize);
+                scast<Transform2D&>(glyphMesh->GetTransform()).setsize(finalSize * 4);
+
+                glyphTexture->SetPixelData(std::move(glyphPixelData));
+            }
+        }
+    }
+    void Examples::Test_Print_Glyph_Atlas_To_Texture(
+        ImportFont* impf,
+        Texture* glyphTexture,
+        Mesh* glyphMesh)
+    {
+        vec2 finalSize = 
+        {
+            fabsf(impf->GetFontData().atlasSize.x),
+            fabsf(impf->GetFontData().atlasSize.y)
+        };
+
+        glyphTexture->SetSize(finalSize);
+        scast<Transform2D&>(glyphMesh->GetTransform()).setsize(finalSize);
+
+        glyphTexture->SetPixelData(vector<u8>{ impf->GetFontData().atlasPixels });
     }
 
     static u8 target{};

@@ -14,6 +14,7 @@
 #include "core/ee_core.hpp"
 #include "graphics/ee_window.hpp"
 #include "graphics/ee_scene.hpp"
+#include "graphics/kw_window_global.hpp"
 #include "graphics/kw_window.hpp"
 #include "core/kw_input.hpp"
 #include "core/kw_core.hpp"
@@ -41,6 +42,8 @@ using MetalMetropolis::Test::Examples;
 
 using ElypsoEngine::Core::AppConfig;
 using ElypsoEngine::Graphics::EngineWindow;
+using KalaWindow::Graphics::Window_Global;
+using KalaWindow::Graphics::FileType;
 using KalaWindow::Graphics::ProcessWindow;
 using KalaWindow::Core::Input;
 using KalaWindow::Core::KalaWindowCore;
@@ -88,10 +91,15 @@ static Mesh* mesh3D_pyramid{};
 static Mesh* mesh3D_sphere{};
 static vector<pair<u8, Mesh*>> rects{};
 
-static Mesh* glyphMesh{};
-static Texture* glyphTexture{};
+static ImportFont* font{};
 
-static ImportFont* impf{};
+static Shader* fontShader{};
+
+static Mesh* fontMesh{};
+static Texture* fontTexture{};
+
+static Mesh* fontBackgroundMesh{};
+static Texture* fontBackgroundTexture{};
 
 static constexpr array<vec4, 6> colors
 {{
@@ -110,6 +118,8 @@ static const path shader_unlit_frag = path("files") / "shaders" / "unlit_frag.sp
 
 static const path shader_ui_rect_vert = path("files") / "shaders" / "ui_rect_vert.spv";
 static const path shader_ui_rect_frag = path("files") / "shaders" / "ui_rect_frag.spv";
+
+static const path shader_ui_font_frag = path("files") / "shaders" / "ui_font_frag.spv";
 
 extern const AppConfig ElypsoEngine::Core::appConfig = 
 {
@@ -213,6 +223,13 @@ void ElypsoEngine::Core::Init()
 
     Examples::Test_Popup_And_File_Drag(pw);
 
+    //sync before creating kg objects
+    EngineCore::SyncID();
+
+    //
+    // CREATE FALLBACK TEXTURE
+    //
+
     TextureData tdata =
     {
         .pixelData = vector<u8>(
@@ -290,36 +307,92 @@ void ElypsoEngine::Core::Init()
     }
 
     //
-    // CREATE GLYPH MESH
+    // CREATE FONT MESH
     //
 
-    glyphTexture = Texture::Initialize(
-        shader2D->GetID(),
+    fontShader = Shader::Initialize(
+        vp->GetID(),
+        true,
+        path(shader_ui_rect_vert),
+        path(shader_ui_font_frag));
+
+    fontTexture = Texture::Initialize(
+        fontShader->GetID(),
         { 
             .format = TexturePixelFormat::FORMAT_BASIC_R8,
-            .filterMode = TextureFilterMode::FILTER_NEAREST
+            //.filterMode = TextureFilterMode::FILTER_NEAREST
         });
 
-    glyphMesh = Examples::Test_Create_Mesh(
-        shader2D,
-        glyphTexture,
+    fontMesh = Examples::Test_Create_Mesh(
+        fontShader,
+        fontTexture,
         {});
 
-    scast<Transform2D&>(glyphMesh->GetTransform()).setsize(50);
-    glyphMesh->SetViewportAnchorPosition(AnchorPosition::P_TOP_RIGHT);
-    glyphMesh->SetLocalAnchorPosition(AnchorPosition::P_TOP_RIGHT);
+    //font color is black
+    fontMesh->SetColor( { vec3{ 0.0f }, 1.0f } );
+
+    scast<Transform2D&>(fontMesh->GetTransform()).setsize(50);
+    fontMesh->SetViewportAnchorPosition(AnchorPosition::P_TOP_RIGHT);
+    fontMesh->SetLocalAnchorPosition(AnchorPosition::P_TOP_RIGHT);
+
+    fontBackgroundTexture = Texture::Initialize(
+        shader2D->GetID(),
+        {});
+
+    fontBackgroundMesh = Examples::Test_Create_Mesh(
+        shader2D,
+        fontBackgroundTexture,
+        {});
+
+    scast<Transform2D&>(fontBackgroundMesh->GetTransform()).setsize(50);
+    fontBackgroundMesh->SetViewportAnchorPosition(AnchorPosition::P_TOP_RIGHT);
+    fontBackgroundMesh->SetLocalAnchorPosition(AnchorPosition::P_TOP_RIGHT);
+
+    fontMesh->SetDrawOrderIndex(100);
+    fontBackgroundMesh->SetDrawOrderIndex(50);
+
+    //
+    // SELECT AND INITIALIZE FONT
+    //
+
+    vector<path> files = Window_Global::GetFiles(
+        FileType::FILE_CUSTOM,
+        {
+            ".ttf",
+            ".otf"
+            },
+            path(exePath.parent_path() / "files" / "fonts"));
+
+    if (files.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to import font because no font was selected!");
+    }
+
+    string fontName = files.front().stem().string();
+    font = ImportFont::Initialize(
+        path(files.front()),
+        64);
+
+    if (!font)
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to import font '" + fontName + "'!");
+    }
+
+    Examples::Test_Print_Glyph_Atlas_To_Texture(
+        font,
+        fontTexture,
+        fontMesh,
+        fontBackgroundMesh);
 
     //
     // CREATE SECOND VIEWPORT
     //
 
-    //sync to ensure viewport gets the highest id
-    EngineCore::SyncID();
-
     vp2 = Viewport::Initialize(gctx->GetID());
-
-    //sync to ensure 3D shader gets the highest id
-    EngineCore::SyncID();
 
     Shader* unlit = Shader::Initialize(
         vp2->GetID(),
@@ -334,9 +407,6 @@ void ElypsoEngine::Core::Init()
             "Failed to create new unlit shader!");
     }
 
-    //sync to ensure 2D shader gets the highest id
-    EngineCore::SyncID();
-
     Shader* rect = Shader::Initialize(
         vp2->GetID(),
         true,
@@ -350,9 +420,6 @@ void ElypsoEngine::Core::Init()
             "Failed to create new rect shader!");
     }
 
-    //sync to ensure 3D cam gets the highest id
-    EngineCore::SyncID();
-
     Camera* new3DCam = Camera::Initialize(
         unlit->GetID(),
         CameraType::CAM_PERSPECTIVE);
@@ -364,9 +431,6 @@ void ElypsoEngine::Core::Init()
             "Failed to create new 3D camera!");
     }
 
-    //sync to ensure 2D cam gets the highest id
-    EngineCore::SyncID();
-
     Camera* new2DCam = Camera::Initialize(
         rect->GetID(),
         CameraType::CAM_ORTHOGRAPHIC);
@@ -377,6 +441,9 @@ void ElypsoEngine::Core::Init()
             "Metal Metropolis core error",
             "Failed to create new 2D camera!");
     }
+
+    //sync after kg objects are done with initialization
+    EngineCore::SyncID();
 
     vp2->SetDynamicResizeState(false);
     vp2->SetType(ViewportType::VP_FILL);
@@ -434,7 +501,6 @@ void ElypsoEngine::Core::Init()
             scast<Transform3D&>(mesh3D_cube->GetTransform()).addpos({0.0f, 0.05f, 0.0f});
         },
         false);
-    */
 
     mesh3D_cube->SetKeyPressedCallback(
         KeyboardButton::K_1,
@@ -492,23 +558,7 @@ void ElypsoEngine::Core::Init()
             mesh3D_sphere->SetColor(vec4{colors[colorIndex]});
         },
         false);
-
-    string fontName = "LeagueGothic-Regular.otf";
-    impf = ImportFont::Initialize(
-        path(exePath.parent_path() / "files" / "fonts" / fontName),
-        32);
-
-    if (!impf)
-    {
-        KalaWindowCore::ForceClose(
-            "Metal Metropolis core error",
-            "Failed to import font '" + fontName + "'!");
-    }
-
-    Examples::Test_Print_Glyph_Atlas_To_Texture(
-        impf,
-        glyphTexture,
-        glyphMesh);
+    */
 }
 
 void ElypsoEngine::Core::EarlyUpdate()
@@ -578,7 +628,7 @@ void ElypsoEngine::Core::Update()
         mesh3D_sphere);
     */
 
-    Examples::Test_Toggle_From_Atlas_State(input);
+    //Examples::Test_Toggle_From_Atlas_State(input);
 
     /*
     Examples::Test_Print_Glyph_To_Console(
@@ -588,9 +638,10 @@ void ElypsoEngine::Core::Update()
 
     Examples::Test_Print_Glyph_To_Texture(
         input,
-        impf,
-        glyphTexture,
-        glyphMesh);
+        font,
+        fontTexture,
+        fontMesh,
+        fontBackgroundMesh);
 }
 
 void ElypsoEngine::Core::LateUpdate()

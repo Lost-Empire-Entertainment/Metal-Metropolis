@@ -72,16 +72,18 @@ namespace MetalMetropolis::Test
         static void Test_Toggle_From_Atlas_State(Input* input);
         static void Test_Print_Glyph_To_Console(
             Input* input,
-            ImportFont* impf);
+            ImportFont* font);
         static void Test_Print_Glyph_To_Texture(
             Input* input,
-            ImportFont* impf,
-            Texture* glyphTexture,
-            Mesh* glyphMesh);
+            ImportFont* font,
+            Texture* fontTexture,
+            Mesh* fontMesh,
+            Mesh* fontBackgroundMesh);
         static void Test_Print_Glyph_Atlas_To_Texture(
-            ImportFont* impf,
-            Texture* glyphTexture,
-            Mesh* glyphMesh);
+            ImportFont* font,
+            Texture* fontTexture,
+            Mesh* fontMesh,
+            Mesh* fontBackgroundMesh);
 
         static void Test_Mesh_Toggle_Recreate_Target(Input* input);
 

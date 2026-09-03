@@ -67,7 +67,7 @@ using std::filesystem::path;
 static bool fpsState{};
 static bool isCameraMovable{};
 
-static bool fromAtlasState{};
+static bool fromAtlasState = true;
 
 static constexpr InputCode combo_vsync_disable[] =
 {
@@ -430,9 +430,10 @@ namespace MetalMetropolis::Test
     }
     void Examples::Test_Print_Glyph_To_Texture(
         Input* input,
-        ImportFont* impf,
-        Texture* glyphTexture,
-        Mesh* glyphMesh)
+        ImportFont* font,
+        Texture* fontTexture,
+        Mesh* fontMesh,
+        Mesh* fontBackgroundMesh)
     {
         if (!input->GetPressedKeys().empty())
         {
@@ -447,14 +448,14 @@ namespace MetalMetropolis::Test
 
             Log::Print("@@@@@ key code: " + to_string(keycode));
 
-            vector<u8> glyphPixelData = impf->GetGlyphPixelData(
+            vector<u8> glyphPixelData = font->GetGlyphPixelData(
                 keycode,
                 fromAtlasState);
 
             if (!glyphPixelData.empty()) 
             {
-                GlyphData& glyphData = impf->GetGlyphData(
-                    impf->GetFontData(),
+                GlyphData& glyphData = font->GetGlyphData(
+                    font->GetFontData(),
                     keycode);
 
                 vec2 finalSize = 
@@ -463,28 +464,33 @@ namespace MetalMetropolis::Test
                     fabsf(glyphData.size.y)
                 };
 
-                glyphTexture->SetSize(finalSize);
-                scast<Transform2D&>(glyphMesh->GetTransform()).setsize(finalSize * 4);
+                fontTexture->SetSize(finalSize);
+                
+                scast<Transform2D&>(fontMesh->GetTransform()).setsize(finalSize * 4);
+                scast<Transform2D&>(fontBackgroundMesh->GetTransform()).setsize(finalSize * 4);
 
-                glyphTexture->SetPixelData(std::move(glyphPixelData));
+                fontTexture->SetPixelData(std::move(glyphPixelData));
             }
         }
     }
     void Examples::Test_Print_Glyph_Atlas_To_Texture(
-        ImportFont* impf,
-        Texture* glyphTexture,
-        Mesh* glyphMesh)
+        ImportFont* font,
+        Texture* fontTexture,
+        Mesh* fontMesh,
+        Mesh* fontBackgroundMesh)
     {
         vec2 finalSize = 
         {
-            fabsf(impf->GetFontData().atlasSize.x),
-            fabsf(impf->GetFontData().atlasSize.y)
+            fabsf(font->GetFontData().atlasSize.x),
+            fabsf(font->GetFontData().atlasSize.y)
         };
 
-        glyphTexture->SetSize(finalSize);
-        scast<Transform2D&>(glyphMesh->GetTransform()).setsize(finalSize);
+        fontTexture->SetSize(finalSize);
+        
+        scast<Transform2D&>(fontMesh->GetTransform()).setsize(finalSize / 2);
+        scast<Transform2D&>(fontBackgroundMesh->GetTransform()).setsize(finalSize / 2);
 
-        glyphTexture->SetPixelData(vector<u8>{ impf->GetFontData().atlasPixels });
+        fontTexture->SetPixelData(vector<u8>{ font->GetFontData().atlasPixels });
     }
 
     static u8 target{};

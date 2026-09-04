@@ -64,7 +64,6 @@ using KalaGraphics::Resources::TexturePixelFormat;
 using KalaGraphics::Resources::TextureFilterMode;
 using KalaGraphics::Resources::FALLBACK_TEXTURE;
 using KalaGraphics::Resources::Camera;
-using KalaGraphics::Resources::CameraType;
 using KalaGraphics::Import::ImportFont;
 
 using std::string;
@@ -103,8 +102,13 @@ static Shader* vp1_Shader2D_font{};
 static Shader* vp2_Shader3D_primary{};
 static Shader* vp2_Shader2D_primary{};
 
-static Texture* vp1_Tex_fallback{};
 static Camera* vp1_Cam3D_primary{};
+static Camera* vp1_Cam2D_primary{};
+
+static Camera* vp2_Cam3D_primary{};
+static Camera* vp2_Cam2D_primary{};
+
+static Texture* vp1_Tex_fallback{};
 
 static Mesh* vp1_Mesh3D_cube{};
 static Mesh* vp1_Mesh3D_pyramid{};
@@ -204,7 +208,13 @@ void ElypsoEngine::Core::Init()
     vp1_Cam3D_primary->SetSensitivityMultiplier(0.175f);
     vp1_Cam3D_primary->SetSpeedMultiplier(7.5f);
 
-    Transform3D& c3t = vp1_Cam3D_primary->GetTransform();
+    err = Camera::GetRegistry().GetContent(ew1_gctx_vp1->GetPrimary2DCameraID(), vp1_Cam2D_primary);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to get primary 2D camera from viewport '" + to_string(ew1_gctx_vp1->GetID()) + "'! Reason: " + err);
+    }
 
     err = Input::GetRegistry().GetContent(ew1_pw->GetInputID(), ew1_pw_input);
     if (!err.empty())
@@ -217,6 +227,8 @@ void ElypsoEngine::Core::Init()
     exePath = KalaWindowCore::GetExePath();
 
     Examples::Test_Popup_And_File_Drag(ew1_pw);
+
+    Transform3D& c3t = vp1_Cam3D_primary->GetTransform();
 
     //sync before creating kg objects
     EngineCore::SyncID();
@@ -400,31 +412,17 @@ void ElypsoEngine::Core::Init()
         ew1_gctx_vp2->GetRootShaderID(RootShaderTarget::T_UNLIT),
         vp2_Shader3D_primary);
 
-    Camera* new3DCam = Camera::Initialize(
-        vp2_Shader3D_primary->GetID(),
-        CameraType::CAM_PERSPECTIVE);
-
-    if (!new3DCam)
-    {
-        KalaWindowCore::ForceClose(
-            "Metal Metropolis core error",
-            "Failed to create new 3D camera!");
-    }
-
     _ = Shader::GetRegistry().GetContent(
         ew1_gctx_vp2->GetRootShaderID(RootShaderTarget::T_RECT),
         vp2_Shader2D_primary);
-
-    Camera* new2DCam = Camera::Initialize(
-        vp2_Shader2D_primary->GetID(),
-        CameraType::CAM_ORTHOGRAPHIC);
-
-    if (!new2DCam)
-    {
-        KalaWindowCore::ForceClose(
-            "Metal Metropolis core error",
-            "Failed to create new 2D camera!");
-    }
+        
+    _ = Camera::GetRegistry().GetContent(
+        ew1_gctx_vp2->GetPrimary3DCameraID(),
+        vp2_Cam3D_primary);
+        
+    _ = Camera::GetRegistry().GetContent(
+        ew1_gctx_vp2->GetPrimary2DCameraID(),
+        vp2_Cam2D_primary);
 
     //sync after kg objects are done with initialization
     EngineCore::SyncID();

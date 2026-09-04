@@ -1,6 +1,6 @@
 # Metal Metropolis
 
-*Metal Metropolis* is the first official game made with [Elypso Engine](https://github.com/lost-empire-entertainment/elypso-engine). This is a C++20 first person extraction style game in singleplayer mode that runs on Vulkan, a demo is expected to release within the month of july but things may change.
+*Metal Metropolis* is the first official game made with [Elypso Engine](https://github.com/lost-empire-entertainment/elypso-engine). This is a first person extraction style shooter game, it is in active early development and occasionally releases pre-release builds you can try out in the [releases](https://github.com/Lost-Empire-Entertainment/Metal-Metropolis/releases) page.
 
 This project relies on several [external dependencies](https://github.com/greeenlaser/external-shared), they are not shipped inside this project, please make sure you have that repository cloned into a folder inside the same parent directory as this project folder before compiling this project from source.
 

@@ -70,6 +70,9 @@ mf --f "${EXE_ORIGIN}/${EXE_NAME}${EXE_EXT}" --t "${OUT_DIR}/${EXE_NAME}${EXE_EX
 # Copy files
 mf --f "files" --t "${OUT_DIR}"
 
+# Delete .vert and .frag
+find "${OUT_DIR}" -type f \( -name '*.vert' -o -name '*.frag' \) -delete
+
 # Copy windows-gnu dlls
 case "$1" in
     --windows-gnu)

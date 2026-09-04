@@ -48,6 +48,7 @@ using KalaWindow::Graphics::ProcessWindow;
 using KalaWindow::Core::Input;
 using KalaWindow::Core::KalaWindowCore;
 using KalaGraphics::Core::GraphicsContext;
+using KalaGraphics::Core::RootShaderTarget;
 using KalaGraphics::Core::Viewport;
 using KalaGraphics::Core::ViewportType;
 using KalaGraphics::Core::Shader;
@@ -72,54 +73,49 @@ using std::vector;
 using std::array;
 using std::pair;
 
-static GraphicsContext* gctx{};
-static Viewport* vp{};
-static Viewport* vp2{};
-static HitTest* ht{};
-
-static ProcessWindow* pw{};
-static Input* input{};
-
-static Shader* shader3D{};
-static Shader* shader2D{};
-
-static Texture* tex{};
-static Camera* cam3D{};
-
-static Mesh* mesh3D_cube{};
-static Mesh* mesh3D_pyramid{};
-static Mesh* mesh3D_sphere{};
-static vector<pair<u8, Mesh*>> rects{};
-
-static ImportFont* font{};
-
-static Shader* fontShader{};
-
-static Mesh* fontMesh{};
-static Texture* fontTexture{};
-
-static Mesh* fontBackgroundMesh{};
-static Texture* fontBackgroundTexture{};
+static path exePath{};
 
 static constexpr array<vec4, 6> colors
 {{
-    { 1.00f, 1.00f, 1.00f, 1.0f }, //plain white
-    { 1.00f, 0.25f, 0.20f, 0.5f }, //coral red
-    { 0.20f, 0.75f, 1.00f, 1.0f }, //sky blue
-    { 0.35f, 1.00f, 0.40f, 0.25f }, //lime green
-    { 0.85f, 0.30f, 1.00f, 1.0f }, //vivid purple
-    { 1.00f, 0.75f, 0.15f, 0.75f }  //golden yellow
+    { 1.00f, 1.00f, 1.00f, 1.00f },  //plain white
+    { 1.00f, 0.25f, 0.20f, 0.05f },  //coral red
+    { 0.20f, 0.75f, 1.00f, 1.00f },  //sky blue
+    { 0.35f, 1.00f, 0.40f, 0.025f }, //lime green
+    { 0.85f, 0.30f, 1.00f, 1.00f },  //vivid purple
+    { 1.00f, 0.75f, 0.15f, 0.75f }   //golden yellow
 }};
 
-static path exePath{};
+static ImportFont* font{};
 
-static const path shader_unlit_vert = path("files") / "shaders" / "unlit_vert.spv";
-static const path shader_unlit_frag = path("files") / "shaders" / "unlit_frag.spv";
+static EngineWindow* ew1{};
+static GraphicsContext* ew1_gctx{};
+static Viewport* ew1_gctx_vp1{};
+static Viewport* ew1_gctx_vp2{};
+static HitTest* ew1_gctx_ht{};
 
-static const path shader_ui_rect_vert = path("files") / "shaders" / "ui_rect_vert.spv";
-static const path shader_ui_rect_frag = path("files") / "shaders" / "ui_rect_frag.spv";
+static ProcessWindow* ew1_pw{};
+static Input* ew1_pw_input{};
 
-static const path shader_ui_font_frag = path("files") / "shaders" / "ui_font_frag.spv";
+static Shader* vp1_Shader3D_primary{};
+static Shader* vp1_Shader2D_primary{};
+static Shader* vp1_Shader2D_font{};
+
+static Shader* vp2_Shader3D_primary{};
+static Shader* vp2_Shader2D_primary{};
+
+static Texture* vp1_Tex_fallback{};
+static Camera* vp1_Cam3D_primary{};
+
+static Mesh* vp1_Mesh3D_cube{};
+static Mesh* vp1_Mesh3D_pyramid{};
+static Mesh* vp1_Mesh3D_sphere{};
+static vector<pair<u8, Mesh*>> vp1_Mesh2D_rects{};
+
+static Mesh* vp1_Mesh2D_font{};
+static Texture* vp1_Tex_font{};
+
+static Mesh* vp1_Mesh2D_fontBackground{};
+static Texture* vp1_Tex_fontBackground{};
 
 extern const AppConfig ElypsoEngine::Core::appConfig = 
 {
@@ -140,8 +136,7 @@ void ElypsoEngine::Core::Init()
     Log::Print(KalaWindowCore::GetOSInfoString());
     Log::Print(" ");
 
-    EngineWindow* ew{};
-    string err = EngineWindow::GetRegistry().GetContent(0, ew, false);
+    string err = EngineWindow::GetRegistry().GetContent(0, ew1, false);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
@@ -149,79 +144,79 @@ void ElypsoEngine::Core::Init()
             "Failed to get engine window '0'! Reason: " + err);
     }
 
-    err = ProcessWindow::GetRegistry().GetContent(ew->GetWindowContextID(), pw);
+    err = ProcessWindow::GetRegistry().GetContent(ew1->GetWindowContextID(), ew1_pw);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to get process window from engine window '" + to_string(ew->GetID()) + "'! Reason: " + err);
+            "Failed to get process window from engine window '" + to_string(ew1->GetID()) + "'! Reason: " + err);
     }
 
-    pw->SetMinSize({800, 600});
+    ew1_pw->SetMinSize({800, 600});
 
-    err = GraphicsContext::GetRegistry().GetContent(ew->GetGraphicsContextID(), gctx);
+    err = GraphicsContext::GetRegistry().GetContent(ew1->GetGraphicsContextID(), ew1_gctx);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to get graphics context from process window '" + to_string(pw->GetID()) + "'! Reason: " + err);
+            "Failed to get graphics context from process window '" + to_string(ew1_pw->GetID()) + "'! Reason: " + err);
     }
 
-    err = HitTest::GetRegistry().GetContent(gctx->GetHitTestID(), ht);
+    err = HitTest::GetRegistry().GetContent(ew1_gctx->GetHitTestID(), ew1_gctx_ht);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to get hit test from graphics context '" + to_string(gctx->GetID()) + "'! Reason: " + err);
+            "Failed to get hit test from graphics context '" + to_string(ew1_gctx->GetID()) + "'! Reason: " + err);
     }
 
-    err = Viewport::GetRegistry().GetContent(gctx->GetRootViewportID(), vp);
+    err = Viewport::GetRegistry().GetContent(ew1_gctx->GetRootViewportID(), ew1_gctx_vp1);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to get root viewport from graphics context '" + to_string(gctx->GetID()) + "'! Reason: " + err);
+            "Failed to get root viewport from graphics context '" + to_string(ew1_gctx->GetID()) + "'! Reason: " + err);
     }
 
-    err = Shader::GetRegistry().GetContent(vp->GetPrimary3DShaderID(), shader3D);
+    err = Shader::GetRegistry().GetContent(ew1_gctx_vp1->GetPrimary3DShaderID(), vp1_Shader3D_primary);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to get primary 3D shader from viewport '" + to_string(vp->GetID()) + "'! Reason: " + err);
+            "Failed to get primary 3D shader from viewport '" + to_string(ew1_gctx_vp1->GetID()) + "'! Reason: " + err);
     }
 
-    err = Shader::GetRegistry().GetContent(vp->GetPrimary2DShaderID(), shader2D);
+    err = Shader::GetRegistry().GetContent(ew1_gctx_vp1->GetPrimary2DShaderID(), vp1_Shader2D_primary);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to get primary 2D shader from viewport '" + to_string(vp->GetID()) + "'! Reason: " + err);
+            "Failed to get primary 2D shader from viewport '" + to_string(ew1_gctx_vp1->GetID()) + "'! Reason: " + err);
     }
 
-    err = Camera::GetRegistry().GetContent(vp->GetPrimary3DCameraID(), cam3D);
+    err = Camera::GetRegistry().GetContent(ew1_gctx_vp1->GetPrimary3DCameraID(), vp1_Cam3D_primary);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to get primary 3D camera from viewport '" + to_string(vp->GetID()) + "'! Reason: " + err);
+            "Failed to get primary 3D camera from viewport '" + to_string(ew1_gctx_vp1->GetID()) + "'! Reason: " + err);
     }
-    cam3D->SetSensitivityMultiplier(0.175f);
-    cam3D->SetSpeedMultiplier(7.5f);
+    vp1_Cam3D_primary->SetSensitivityMultiplier(0.175f);
+    vp1_Cam3D_primary->SetSpeedMultiplier(7.5f);
 
-    Transform3D& c3t = cam3D->GetTransform();
+    Transform3D& c3t = vp1_Cam3D_primary->GetTransform();
 
-    err = Input::GetRegistry().GetContent(pw->GetInputID(), input);
+    err = Input::GetRegistry().GetContent(ew1_pw->GetInputID(), ew1_pw_input);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to get input from engine windows process window '" + to_string(pw->GetID()) + "'! Reason: " + err);
+            "Failed to get input from engine windows process window '" + to_string(ew1_pw->GetID()) + "'! Reason: " + err);
     }
 
     exePath = KalaWindowCore::GetExePath();
 
-    Examples::Test_Popup_And_File_Drag(pw);
+    Examples::Test_Popup_And_File_Drag(ew1_pw);
 
     //sync before creating kg objects
     EngineCore::SyncID();
@@ -238,20 +233,20 @@ void ElypsoEngine::Core::Init()
         .filterMode = TextureFilterMode::FILTER_NEAREST,
         .size = 16
     };
-    tex = Examples::Test_Create_Texture(
-        shader3D,
+    vp1_Tex_fallback = Examples::Test_Create_Texture(
+        vp1_Shader3D_primary,
         std::move(tdata));
 
     //
     // CREATE 3D CUBE
     //
 
-    mesh3D_cube = Examples::Test_Create_Mesh(
-        shader3D,
-        tex,
+    vp1_Mesh3D_cube = Examples::Test_Create_Mesh(
+        vp1_Shader3D_primary,
+        vp1_Tex_fallback,
         Mesh::GenerateMeshData(Mesh_Cube{.edgeCount = 4}));
 
-    scast<Transform3D&>(mesh3D_cube->GetTransform()).setpos(
+    scast<Transform3D&>(vp1_Mesh3D_cube->GetTransform()).setpos(
         c3t.getdirfront() * 2.0f 
         - c3t.getdirright() * 2.0f);
 
@@ -259,24 +254,24 @@ void ElypsoEngine::Core::Init()
     // CREATE 3D PYRAMID
     //
 
-    mesh3D_pyramid = Examples::Test_Create_Mesh(
-        shader3D,
-        tex,
+    vp1_Mesh3D_pyramid = Examples::Test_Create_Mesh(
+        vp1_Shader3D_primary,
+        vp1_Tex_fallback,
         Mesh::GenerateMeshData(Mesh_Pyramid{.edgeCount = 4}));
 
-    scast<Transform3D&>(mesh3D_pyramid->GetTransform()).setpos(
+    scast<Transform3D&>(vp1_Mesh3D_pyramid->GetTransform()).setpos(
         c3t.getdirfront() * 2.0f);
 
     //
     // CREATE 3D SPHERE
     //
 
-    mesh3D_sphere = Examples::Test_Create_Mesh(
-        shader3D,
-        tex,
+    vp1_Mesh3D_sphere = Examples::Test_Create_Mesh(
+        vp1_Shader3D_primary,
+        vp1_Tex_fallback,
         Mesh::GenerateMeshData(Mesh_Sphere{}));
 
-    scast<Transform3D&>(mesh3D_sphere->GetTransform()).setpos(
+    scast<Transform3D&>(vp1_Mesh3D_sphere->GetTransform()).setpos(
         c3t.getdirfront() * 2.0f 
         + c3t.getdirright() * 2.0f);
 
@@ -287,19 +282,19 @@ void ElypsoEngine::Core::Init()
     vec2 pos{};
     for (int i = 0; i < 5; ++i)
     {
-        rects.push_back(
+        vp1_Mesh2D_rects.push_back(
         {
             0,
             Examples::Test_Create_Mesh(
-            shader2D,
-            tex,
+            vp1_Shader2D_primary,
+            vp1_Tex_fallback,
             {})
         });
 
-        rects[i].second->SetViewportAnchorPosition(AnchorPosition::P_TOP_LEFT);
-        rects[i].second->SetLocalAnchorPosition(AnchorPosition::P_TOP_LEFT);
+        vp1_Mesh2D_rects[i].second->SetViewportAnchorPosition(AnchorPosition::P_TOP_LEFT);
+        vp1_Mesh2D_rects[i].second->SetLocalAnchorPosition(AnchorPosition::P_TOP_LEFT);
 
-        Transform2D& t = rects[i].second->GetTransform();
+        Transform2D& t = vp1_Mesh2D_rects[i].second->GetTransform();
         t.setsize(vec2{ 50.0f, 20.0f });
         t.addpos(pos);
 
@@ -310,51 +305,50 @@ void ElypsoEngine::Core::Init()
     // CREATE FONT MESH
     //
 
-    fontShader = Shader::Initialize(
-        vp->GetID(),
-        true,
-        path(shader_ui_rect_vert),
-        path(shader_ui_font_frag));
+    string _ = Shader::GetRegistry().GetContent(
+        ew1_gctx_vp1->GetRootShaderID(RootShaderTarget::T_FONT),
+        vp1_Shader2D_font);
 
-    fontTexture = Texture::Initialize(
-        fontShader->GetID(),
+    vp1_Tex_font = Texture::Initialize(
+        vp1_Shader2D_font->GetID(),
         { 
             .format = TexturePixelFormat::FORMAT_BASIC_R8,
             //.filterMode = TextureFilterMode::FILTER_NEAREST
         });
 
-    fontMesh = Examples::Test_Create_Mesh(
-        fontShader,
-        fontTexture,
+    vp1_Mesh2D_font = Examples::Test_Create_Mesh(
+        vp1_Shader2D_font,
+        vp1_Tex_font,
         {});
 
     //font color is black
-    fontMesh->SetColor( { vec3{ 0.0f }, 1.0f } );
+    vp1_Mesh2D_font->SetColor( { vec3{ 0.0f }, 1.0f } );
 
-    scast<Transform2D&>(fontMesh->GetTransform()).setsize(50);
-    fontMesh->SetViewportAnchorPosition(AnchorPosition::P_TOP_RIGHT);
-    fontMesh->SetLocalAnchorPosition(AnchorPosition::P_TOP_RIGHT);
+    scast<Transform2D&>(vp1_Mesh2D_font->GetTransform()).setsize(50);
+    vp1_Mesh2D_font->SetViewportAnchorPosition(AnchorPosition::P_TOP_RIGHT);
+    vp1_Mesh2D_font->SetLocalAnchorPosition(AnchorPosition::P_TOP_RIGHT);
 
-    fontBackgroundTexture = Texture::Initialize(
-        shader2D->GetID(),
+    vp1_Tex_fontBackground = Texture::Initialize(
+        vp1_Shader2D_primary->GetID(),
         {});
 
-    fontBackgroundMesh = Examples::Test_Create_Mesh(
-        shader2D,
-        fontBackgroundTexture,
+    vp1_Mesh2D_fontBackground = Examples::Test_Create_Mesh(
+        vp1_Shader2D_primary,
+        vp1_Tex_fontBackground,
         {});
 
-    scast<Transform2D&>(fontBackgroundMesh->GetTransform()).setsize(50);
-    fontBackgroundMesh->SetViewportAnchorPosition(AnchorPosition::P_TOP_RIGHT);
-    fontBackgroundMesh->SetLocalAnchorPosition(AnchorPosition::P_TOP_RIGHT);
+    scast<Transform2D&>(vp1_Mesh2D_fontBackground->GetTransform()).setsize(50);
+    vp1_Mesh2D_fontBackground->SetViewportAnchorPosition(AnchorPosition::P_TOP_RIGHT);
+    vp1_Mesh2D_fontBackground->SetLocalAnchorPosition(AnchorPosition::P_TOP_RIGHT);
 
-    fontMesh->SetDrawOrderIndex(100);
-    fontBackgroundMesh->SetDrawOrderIndex(50);
+    vp1_Mesh2D_font->SetDrawOrderIndex(100);
+    vp1_Mesh2D_fontBackground->SetDrawOrderIndex(50);
 
     //
     // SELECT AND INITIALIZE FONT
     //
 
+    /*
     vector<path> files = Window_Global::GetFiles(
         FileType::FILE_CUSTOM,
         {
@@ -374,54 +368,40 @@ void ElypsoEngine::Core::Init()
     font = ImportFont::Initialize(
         path(files.front()),
         64);
+    */
+
+    path fontName = path("LeagueGothic") / "LeagueGothic-Regular.otf";
+    path fontPath = exePath.parent_path() / "files" / "fonts" / fontName;
+
+    font = ImportFont::Initialize(
+        path(fontPath),
+        64);
 
     if (!font)
     {
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
-            "Failed to import font '" + fontName + "'!");
+            "Failed to import font '" + fontName.string() + "'!");
     }
 
     Examples::Test_Print_Glyph_Atlas_To_Texture(
         font,
-        fontTexture,
-        fontMesh,
-        fontBackgroundMesh);
+        vp1_Tex_font,
+        vp1_Mesh2D_font,
+        vp1_Mesh2D_fontBackground);
 
     //
     // CREATE SECOND VIEWPORT
     //
 
-    vp2 = Viewport::Initialize(gctx->GetID());
+    ew1_gctx_vp2 = Viewport::Initialize(ew1_gctx->GetID());
 
-    Shader* unlit = Shader::Initialize(
-        vp2->GetID(),
-        false,
-        path(shader_unlit_vert),
-        path(shader_unlit_frag));
-
-    if (!unlit)
-    {
-        KalaWindowCore::ForceClose(
-            "Metal Metropolis core error",
-            "Failed to create new unlit shader!");
-    }
-
-    Shader* rect = Shader::Initialize(
-        vp2->GetID(),
-        true,
-        path(shader_ui_rect_vert),
-        path(shader_ui_rect_frag));
-
-    if (!rect)
-    {
-        KalaWindowCore::ForceClose(
-            "Metal Metropolis core error",
-            "Failed to create new rect shader!");
-    }
+    _ = Shader::GetRegistry().GetContent(
+        ew1_gctx_vp2->GetRootShaderID(RootShaderTarget::T_UNLIT),
+        vp2_Shader3D_primary);
 
     Camera* new3DCam = Camera::Initialize(
-        unlit->GetID(),
+        vp2_Shader3D_primary->GetID(),
         CameraType::CAM_PERSPECTIVE);
 
     if (!new3DCam)
@@ -431,8 +411,12 @@ void ElypsoEngine::Core::Init()
             "Failed to create new 3D camera!");
     }
 
+    _ = Shader::GetRegistry().GetContent(
+        ew1_gctx_vp2->GetRootShaderID(RootShaderTarget::T_RECT),
+        vp2_Shader2D_primary);
+
     Camera* new2DCam = Camera::Initialize(
-        rect->GetID(),
+        vp2_Shader2D_primary->GetID(),
         CameraType::CAM_ORTHOGRAPHIC);
 
     if (!new2DCam)
@@ -445,26 +429,26 @@ void ElypsoEngine::Core::Init()
     //sync after kg objects are done with initialization
     EngineCore::SyncID();
 
-    vp2->SetDynamicResizeState(false);
-    vp2->SetType(ViewportType::VP_FILL);
-    vp2->SetSize(250);
-    vp2->SetOffset(0);
-    vp2->SetBackgroundColor(1);
-    vp2->SetVisibleState(false);
+    ew1_gctx_vp2->SetDynamicResizeState(false);
+    ew1_gctx_vp2->SetType(ViewportType::VP_FILL);
+    ew1_gctx_vp2->SetSize(250);
+    ew1_gctx_vp2->SetOffset(0);
+    ew1_gctx_vp2->SetBackgroundColor(1);
+    ew1_gctx_vp2->SetVisibleState(false);
 
-    vp->SetType(ViewportType::VP_FIT);
+    ew1_gctx_vp1->SetType(ViewportType::VP_FIT);
 
-    for (size_t i = 0; i < rects.size(); i++)
+    for (size_t i = 0; i < vp1_Mesh2D_rects.size(); i++)
     {
-        Mesh* m = rects[i].second;
+        Mesh* m = vp1_Mesh2D_rects[i].second;
 
         m->SetMouseButtonPressedCallback(
             MouseButton::M_LEFT,
             [m, i]()
             {
-                ++rects[i].first;
-                if (rects[i].first == colors.size()) rects[i].first = 0;
-                m->SetColor(vec4{colors[rects[i].first]});
+                ++vp1_Mesh2D_rects[i].first;
+                if (vp1_Mesh2D_rects[i].first == colors.size()) vp1_Mesh2D_rects[i].first = 0;
+                m->SetColor(vec4{colors[vp1_Mesh2D_rects[i].first]});
                 
                 Log::Print("@@@@@ pressed lmb over 2D mesh '" + to_string(m->GetID()) + "'..."); 
             });
@@ -494,22 +478,22 @@ void ElypsoEngine::Core::Init()
     }
 
     /*
-    mesh3D_cube->SetKeyHeldCallback(
+    vp1_Mesh3D_cube->SetKeyHeldCallback(
         KeyboardButton::K_SPACE,
         []() 
         {
-            scast<Transform3D&>(mesh3D_cube->GetTransform()).addpos({0.0f, 0.05f, 0.0f});
+            scast<Transform3D&>(vp1_Mesh3D_cube->GetTransform()).addpos({0.0f, 0.05f, 0.0f});
         },
         false);
 
-    mesh3D_cube->SetKeyPressedCallback(
+    vp1_Mesh3D_cube->SetKeyPressedCallback(
         KeyboardButton::K_1,
         []() 
         {
-            mesh3D_cube->SetTransparentState(!mesh3D_cube->IsTransparent());
+            vp1_Mesh3D_cube->SetTransparentState(!vp1_Mesh3D_cube->IsTransparent());
         },
         false);
-    mesh3D_cube->SetKeyPressedCallback(
+    vp1_Mesh3D_cube->SetKeyPressedCallback(
         KeyboardButton::K_2,
         []() 
         {
@@ -517,18 +501,18 @@ void ElypsoEngine::Core::Init()
 
             ++colorIndex;
             if (colorIndex == colors.size()) colorIndex = 0;
-            mesh3D_cube->SetColor(vec4{colors[colorIndex]});
+            vp1_Mesh3D_cube->SetColor(vec4{colors[colorIndex]});
         },
         false);
 
-    mesh3D_pyramid->SetKeyPressedCallback(
+    vp1_Mesh3D_pyramid->SetKeyPressedCallback(
         KeyboardButton::K_3,
         []() 
         {
-            mesh3D_pyramid->SetTransparentState(!mesh3D_pyramid->IsTransparent());
+            vp1_Mesh3D_pyramid->SetTransparentState(!vp1_Mesh3D_pyramid->IsTransparent());
         },
         false);
-    mesh3D_pyramid->SetKeyPressedCallback(
+    vp1_Mesh3D_pyramid->SetKeyPressedCallback(
         KeyboardButton::K_4,
         []() 
         {
@@ -536,18 +520,18 @@ void ElypsoEngine::Core::Init()
 
             ++colorIndex;
             if (colorIndex == colors.size()) colorIndex = 0;
-            mesh3D_pyramid->SetColor(vec4{colors[colorIndex]});
+            vp1_Mesh3D_pyramid->SetColor(vec4{colors[colorIndex]});
         },
         false);
 
-    mesh3D_sphere->SetKeyPressedCallback(
+    vp1_Mesh3D_sphere->SetKeyPressedCallback(
         KeyboardButton::K_5,
         []() 
         {
-            mesh3D_sphere->SetTransparentState(!mesh3D_sphere->IsTransparent());
+            vp1_Mesh3D_sphere->SetTransparentState(!vp1_Mesh3D_sphere->IsTransparent());
         },
         false);
-    mesh3D_sphere->SetKeyPressedCallback(
+    vp1_Mesh3D_sphere->SetKeyPressedCallback(
         KeyboardButton::K_6,
         []() 
         {
@@ -555,7 +539,7 @@ void ElypsoEngine::Core::Init()
 
             ++colorIndex;
             if (colorIndex == colors.size()) colorIndex = 0;
-            mesh3D_sphere->SetColor(vec4{colors[colorIndex]});
+            vp1_Mesh3D_sphere->SetColor(vec4{colors[colorIndex]});
         },
         false);
     */
@@ -583,15 +567,15 @@ void ElypsoEngine::Core::Update()
     }
 
     Examples::Test_VSync_Input(
-        gctx,
-        input);
+        ew1_gctx,
+        ew1_pw_input);
 
-    Examples::Test_Create_Notification(input);
+    Examples::Test_Create_Notification(ew1_pw_input);
 
-    Examples::Test_System_Sound_Input(input);
+    Examples::Test_System_Sound_Input(ew1_pw_input);
 
     Examples::Test_Get_Files(
-        input,
+        ew1_pw_input,
         { 
             "*.spv",
             "*.vert",
@@ -601,47 +585,47 @@ void ElypsoEngine::Core::Update()
         path{exePath}.parent_path());
 
     Examples::Test_Window_Toggles(
-        pw,
-        input);
+        ew1_pw,
+        ew1_pw_input);
 
     Examples::Test_Texture_Filter_Mode(
-        input,
-        tex);
+        ew1_pw_input,
+        vp1_Tex_fallback);
 
-    Examples::Test_Camera_Toggle(input);
+    Examples::Test_Camera_Toggle(ew1_pw_input);
 
     Examples::Test_Camera_Move(
-        input,
-        cam3D,
+        ew1_pw_input,
+        vp1_Cam3D_primary,
         EngineCore::GetDeltaTime());
 
     /*
-    Examples::Test_Mesh_Toggle_Recreate_Target(input);
+    Examples::Test_Mesh_Toggle_Recreate_Target(ew1_pw_input);
     Examples::Test_Mesh_Recreate_Cube_On_Mouse_Actions(
-        input,
-        mesh3D_cube);
+        ew1_pw_input,
+        vp1_Mesh3D_cube);
     Examples::Test_Mesh_Recreate_Pyramid_On_Mouse_Actions(
-        input,
-        mesh3D_pyramid);
+        ew1_pw_input,
+        vp1_Mesh3D_pyramid);
     Examples::Test_Mesh_Recreate_Sphere_On_Mouse_Actions(
-        input,
-        mesh3D_sphere);
+        ew1_pw_input,
+        vp1_Mesh3D_sphere);
     */
 
-    //Examples::Test_Toggle_From_Atlas_State(input);
+    //Examples::Test_Toggle_From_Atlas_State(ew1_pw_input);
 
     /*
     Examples::Test_Print_Glyph_To_Console(
-        input,
+        ew1_pw_input,
         impf);
     */
 
     Examples::Test_Print_Glyph_To_Texture(
-        input,
+        ew1_pw_input,
         font,
-        fontTexture,
-        fontMesh,
-        fontBackgroundMesh);
+        vp1_Tex_font,
+        vp1_Mesh2D_font,
+        vp1_Mesh2D_fontBackground);
 }
 
 void ElypsoEngine::Core::LateUpdate()

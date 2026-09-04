@@ -182,7 +182,7 @@ void ElypsoEngine::Core::Init()
             "Failed to get root viewport from graphics context '" + to_string(ew1_gctx->GetID()) + "'! Reason: " + err);
     }
 
-    err = Shader::GetRegistry().GetContent(ew1_gctx_vp1->GetPrimary3DShaderID(), vp1_Shader3D_primary);
+    err = Shader::GetRegistry().GetContent(ew1_gctx_vp1->GetShader3DIDs().front(), vp1_Shader3D_primary);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
@@ -190,7 +190,7 @@ void ElypsoEngine::Core::Init()
             "Failed to get primary 3D shader from viewport '" + to_string(ew1_gctx_vp1->GetID()) + "'! Reason: " + err);
     }
 
-    err = Shader::GetRegistry().GetContent(ew1_gctx_vp1->GetPrimary2DShaderID(), vp1_Shader2D_primary);
+    err = Shader::GetRegistry().GetContent(ew1_gctx_vp1->GetShader2DIDs().front(), vp1_Shader2D_primary);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(

@@ -26,6 +26,7 @@
 #include "resources/kg_texture.hpp"
 #include "resources/kg_camera.hpp"
 #include "import/kg_import_font.hpp"
+#include "import/kg_import_mesh.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -35,6 +36,9 @@ using KalaHeaders::KalaMath::vec4;
 using KalaHeaders::KalaMath::vec3;
 using KalaHeaders::KalaMath::Transform3D;
 using KalaHeaders::KalaMath::Transform2D;
+using KalaHeaders::KalaMath::PosTarget;
+using KalaHeaders::KalaMath::RotTarget;
+using KalaHeaders::KalaMath::SizeTarget;
 
 using KalaHeaders::KalaKeyStandards::KeyboardButton;
 using KalaHeaders::KalaKeyStandards::MouseButton;
@@ -68,6 +72,9 @@ using KalaGraphics::Resources::TextureWrapMode;
 using KalaGraphics::Resources::FALLBACK_TEXTURE;
 using KalaGraphics::Resources::Camera;
 using KalaGraphics::Import::ImportFont;
+using KalaGraphics::Import::ImportPrimitiveData;
+using KalaGraphics::Import::ImportNodeData;
+using KalaGraphics::Import::ImportMesh;
 
 using std::string;
 using std::filesystem::path;
@@ -90,6 +97,7 @@ static constexpr array<vec4, 6> colors
 */
 
 //static ImportFont* font{};
+static ImportMesh* importMesh{};
 
 static EngineWindow* ew1{};
 static GraphicsContext* ew1_gctx{};
@@ -113,10 +121,12 @@ static Camera* vp1_Cam2D_primary{};
 //static Camera* vp2_Cam3D_primary{};
 //static Camera* vp2_Cam2D_primary{};
 
+static Texture* vp1_Tex_white{};
 static Texture* vp1_Tex_fallback{};
 static Texture* vp1_Tex_fallback_groundTest{};
 
 static Mesh* vp1_Mesh3D_groundTest{}; //cube{};
+static Mesh* vp1_Mesh3D_imported{};
 //static Mesh* vp1_Mesh3D_pyramid{};
 //static Mesh* vp1_Mesh3D_sphere{};
 static vector<pair<u8, Mesh*>> vp1_Mesh2D_rects{};
@@ -240,8 +250,10 @@ void ElypsoEngine::Core::Init()
     EngineCore::SyncID();
 
     //
-    // CREATE FALLBACK TEXTURE
+    // CREATE TEXTURES
     //
+
+    vp1_Tex_white = Examples::Test_Create_Texture(vp1_Shader3D_primary);
 
     vp1_Tex_fallback = Examples::Test_Create_Texture(
         vp1_Shader3D_primary,
@@ -633,6 +645,70 @@ void ElypsoEngine::Core::Update()
         ew1_pw_input,
         vp1_Cam3D_primary,
         EngineCore::GetDeltaTime());
+
+    if (ew1_pw_input->IsKeyPressed(KeyboardButton::K_SPACE))
+    {
+        vector<path> files = Window_Global::GetFiles(
+            FileType::FILE_CUSTOM,
+            {
+                ".glb",
+                ".gltf"
+                });
+
+        if (files.empty())
+        {
+            Log::Print(
+                "Failed to import glb/gltf file because none was selected!",
+                "GAME_CORE",
+                LogType::LOG_ERROR,
+                2);
+        }
+        else
+        {
+            importMesh = ImportMesh::Initialize(path(files.front()));
+            if (!importMesh)
+            {
+                Log::Print(
+                    "Failed to import mesh from path '" + files.front().string() + "'!",
+                    "GAME_CORE",
+                    LogType::LOG_ERROR,
+                    2);
+            }
+            else
+            {
+                if (vp1_Mesh3D_imported) vp1_Mesh3D_imported->Destroy();
+
+                const ImportNodeData& nodeData = importMesh->GetMeshData().front();
+
+                vp1_Mesh3D_imported = Mesh::Initialize(
+                    vp1_Shader3D_primary->GetID(), 
+                    vp1_Tex_white->GetID());
+
+                if (!vp1_Mesh3D_imported)
+                {
+                    KalaWindowCore::ForceClose(
+                        "Metal Metropolis core error",
+                        "Failed to import mesh because one of its nodes failed to initialize!");
+                }
+
+                const ImportPrimitiveData& primitiveData = nodeData.primitiveData.front();
+
+                vp1_Mesh3D_imported->SetMeshData(
+                {
+                    .vertices = vector<Vertex>(primitiveData.meshData.vertices),
+                    .indices = vector<u32>(primitiveData.meshData.indices)
+                });
+                vp1_Mesh3D_imported->SetColor(vec4(primitiveData.matData.baseColor));
+
+                Transform3D& mt = vp1_Mesh3D_imported->GetTransform();
+                mt.setpos(nodeData.transform.getpos(PosTarget::POS_LOCAL));
+                mt.setrotquat(nodeData.transform.getrotquat(RotTarget::ROT_LOCAL));
+                mt.setsize(nodeData.transform.getsize(SizeTarget::SIZE_LOCAL));
+
+                vp1_Mesh3D_imported->FlipFaceDirection();
+            }
+        }
+    }
 
     /*
     Examples::Test_Create_Notification(ew1_pw_input);

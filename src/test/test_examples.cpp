@@ -220,23 +220,27 @@ namespace MetalMetropolis::Test
         GraphicsContext* gctx,
         Input* input)
     {
-        if (input->IsComboPressed(combo_vsync_disable))
+        //if (input->IsComboPressed(combo_vsync_disable))
+        if (input->IsKeyPressed(KeyboardButton::K_1))
         {
             Log::Print("@@@@@ set vsync state to off");
             gctx->SetVSyncState(VSyncState::VSYNC_OFF);
         }
-        else if (input->IsComboPressed(combo_vsync_adaptive))
+        //else if (input->IsComboPressed(combo_vsync_adaptive))
+        else if (input->IsKeyPressed(KeyboardButton::K_2))
         {
             Log::Print("@@@@@ set vsync state to adaptive");
             gctx->SetVSyncState(VSyncState::VSYNC_ON_ADAPTIVE);
         }
-        else if (input->IsComboPressed(combo_vsync_triple_buffered))
+        //else if (input->IsComboPressed(combo_vsync_triple_buffered))
+        if (input->IsKeyPressed(KeyboardButton::K_3))
         {
             Log::Print("@@@@@ set vsync state to triple buffered");
             gctx->SetVSyncState(VSyncState::VSYNC_ON_TRIPLE_BUFFERED);
         }
 
-        if (input->IsComboPressed(combo_toggle_fps))
+        //if (input->IsComboPressed(combo_toggle_fps))
+        if (input->IsKeyPressed(KeyboardButton::K_0))
         {
             fpsState = !fpsState;
             string fpsStateValue = fpsState ? "on" : "off";
@@ -378,7 +382,8 @@ namespace MetalMetropolis::Test
 
     void Examples::Test_Camera_Toggle(Input* input)
     {
-        if (input->IsComboPressed(combo_toggle_cam_move))
+        //if (input->IsComboPressed(combo_toggle_cam_move))
+        if (input->IsKeyPressed(KeyboardButton::K_ESC))
         {
             isCameraMovable = !isCameraMovable;
 

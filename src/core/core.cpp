@@ -125,8 +125,8 @@ static Texture* vp1_Tex_white{};
 static Texture* vp1_Tex_fallback{};
 static Texture* vp1_Tex_fallback_groundTest{};
 
+static vector<Mesh*> vp1_Mesh3D_importedMeshes{};
 static Mesh* vp1_Mesh3D_groundTest{}; //cube{};
-static Mesh* vp1_Mesh3D_imported{};
 //static Mesh* vp1_Mesh3D_pyramid{};
 //static Mesh* vp1_Mesh3D_sphere{};
 static vector<pair<u8, Mesh*>> vp1_Mesh2D_rects{};
@@ -676,36 +676,48 @@ void ElypsoEngine::Core::Update()
             }
             else
             {
-                if (vp1_Mesh3D_imported) vp1_Mesh3D_imported->Destroy();
-
-                const ImportNodeData& nodeData = importMesh->GetMeshData().front();
-
-                vp1_Mesh3D_imported = Mesh::Initialize(
-                    vp1_Shader3D_primary->GetID(), 
-                    vp1_Tex_white->GetID());
-
-                if (!vp1_Mesh3D_imported)
+                if (!vp1_Mesh3D_importedMeshes.empty())
                 {
-                    KalaWindowCore::ForceClose(
-                        "Metal Metropolis core error",
-                        "Failed to import mesh because one of its nodes failed to initialize!");
+                    for (Mesh* m : vp1_Mesh3D_importedMeshes)
+                    {
+                        m->Destroy();
+                    }
                 }
+                vp1_Mesh3D_importedMeshes.clear();
 
-                const ImportPrimitiveData& primitiveData = nodeData.primitiveData.front();
-
-                vp1_Mesh3D_imported->SetMeshData(
+                for (const ImportNodeData& nodeData : importMesh->GetMeshData())
                 {
-                    .vertices = vector<Vertex>(primitiveData.meshData.vertices),
-                    .indices = vector<u32>(primitiveData.meshData.indices)
-                });
-                vp1_Mesh3D_imported->SetColor(vec4(primitiveData.matData.baseColor));
+                    for (const ImportPrimitiveData& primitiveData : nodeData.primitiveData)
+                    {
+                        Mesh* primitive = Mesh::Initialize(
+                            vp1_Shader3D_primary->GetID(), 
+                            vp1_Tex_white->GetID());
 
-                Transform3D& mt = vp1_Mesh3D_imported->GetTransform();
-                mt.setpos(nodeData.transform.getpos(PosTarget::POS_LOCAL));
-                mt.setrotquat(nodeData.transform.getrotquat(RotTarget::ROT_LOCAL));
-                mt.setsize(nodeData.transform.getsize(SizeTarget::SIZE_LOCAL));
+                        if (!primitive)
+                        {
+                            KalaWindowCore::ForceClose(
+                                "Metal Metropolis core error",
+                                "Failed to import model '" + files.front().string() 
+                                + "' because one of its primitives failed to initialize!");
+                        }
 
-                vp1_Mesh3D_imported->FlipFaceDirection();
+                        primitive->SetMeshData(
+                        {
+                            .vertices = vector<Vertex>(primitiveData.meshData.vertices),
+                            .indices = vector<u32>(primitiveData.meshData.indices)
+                        });
+                        primitive->SetColor(vec4(primitiveData.matData.baseColor));
+
+                        Transform3D& mt = primitive->GetTransform();
+                        mt.setpos(nodeData.transform.getpos(PosTarget::POS_LOCAL));
+                        mt.setrotquat(nodeData.transform.getrotquat(RotTarget::ROT_LOCAL));
+                        mt.setsize(nodeData.transform.getsize(SizeTarget::SIZE_LOCAL));
+
+                        primitive->FlipFaceDirection();
+
+                        vp1_Mesh3D_importedMeshes.push_back(primitive);
+                    }
+                }
             }
         }
     }

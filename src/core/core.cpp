@@ -27,6 +27,7 @@
 #include "resources/kg_camera.hpp"
 #include "import/kg_import_font.hpp"
 #include "import/kg_import_mesh.hpp"
+#include "export/kg_export_mesh.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -75,6 +76,7 @@ using KalaGraphics::Import::ImportFont;
 using KalaGraphics::Import::ImportPrimitiveData;
 using KalaGraphics::Import::ImportNodeData;
 using KalaGraphics::Import::ImportMesh;
+using KalaGraphics::Export::ExportMesh;
 
 using std::string;
 using std::filesystem::path;
@@ -685,6 +687,8 @@ void ElypsoEngine::Core::Update()
                 }
                 vp1_Mesh3D_importedMeshes.clear();
 
+                vector<u32> meshIDs{};
+
                 for (const ImportNodeData& nodeData : importMesh->GetMeshData())
                 {
                     for (const ImportPrimitiveData& primitiveData : nodeData.primitiveData)
@@ -716,8 +720,18 @@ void ElypsoEngine::Core::Update()
                         primitive->FlipFaceDirection();
 
                         vp1_Mesh3D_importedMeshes.push_back(primitive);
+
+                        meshIDs.push_back(primitive->GetID());
                     }
                 }
+
+                ExportMesh::ExportMeshes(meshIDs, path(
+                    files.front().parent_path() 
+                    / (files.front().stem().string() + "_1.glb")));
+
+                Log::Print(
+                    "@@@@@\n"
+                    "json data:\n" + ExportMesh::GetJsonData(meshIDs));
             }
         }
     }

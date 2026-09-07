@@ -120,6 +120,8 @@ static Camera* vp1_Cam2D_primary{};
 //static Camera* vp2_Cam3D_primary{};
 //static Camera* vp2_Cam2D_primary{};
 
+static Texture* vp1_Tex_root{};
+static Texture* vp1_Tex_fallback{};
 static Texture* vp1_Tex_fallback_groundTest{};
 
 static vector<Mesh*> vp1_Mesh3D_importedMeshes{};
@@ -210,6 +212,22 @@ void ElypsoEngine::Core::Init()
         KalaWindowCore::ForceClose(
             "Metal Metropolis core error",
             "Failed to get primary 2D shader from viewport '" + to_string(ew1_gctx_vp1->GetID()) + "'! Reason: " + err);
+    }
+
+    err = Texture::GetRegistry().GetContent(vp1_Shader3D_primary->GetRootTextureID(), vp1_Tex_root);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to get root texture from shader '" + to_string(vp1_Shader3D_primary->GetID()) + "'! Reason: " + err);
+    }
+
+    err = Texture::GetRegistry().GetContent(vp1_Shader3D_primary->GetRootTextureID(), vp1_Tex_fallback);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to get fallback texture from shader '" + to_string(vp1_Shader3D_primary->GetID()) + "'! Reason: " + err);
     }
 
     err = Camera::GetRegistry().GetContent(ew1_gctx_vp1->GetPrimary3DCameraID(), vp1_Cam3D_primary);
@@ -638,13 +656,11 @@ void ElypsoEngine::Core::Update()
         vp1_Cam3D_primary,
         EngineCore::GetDeltaTime());
 
-    /*
     Examples::Test_Import_Meshes(
         ew1_pw_input,
-        vp1_Tex_white,
         vp1_Shader3D_primary);
-    */
     
+    /*
     static Texture* cubeTex{};
     static Mesh* cubeMesh{};
 
@@ -694,6 +710,7 @@ void ElypsoEngine::Core::Update()
             }
         }
     }
+    */
 
     /*
     Examples::Test_Create_Notification(ew1_pw_input);

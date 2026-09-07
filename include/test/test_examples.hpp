@@ -120,7 +120,6 @@ namespace MetalMetropolis::Test
 
         static void Test_Import_Meshes(
             Input* input,
-            Texture* texture,
             Shader* shader);
 
         static void Test_Import_Texture(

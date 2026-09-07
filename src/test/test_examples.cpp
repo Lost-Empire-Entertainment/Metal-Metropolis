@@ -829,7 +829,6 @@ namespace MetalMetropolis::Test
 
     void Examples::Test_Import_Meshes(
         Input* input,
-        Texture* texture,
         Shader* shader)
     {
         static vector<Mesh*> importedMeshes{};
@@ -880,9 +879,7 @@ namespace MetalMetropolis::Test
                     {
                         for (const ImportPrimitiveData& primitiveData : nodeData.primitiveData)
                         {
-                            Mesh* primitive = Mesh::Initialize(
-                                shader->GetID(), 
-                                texture->GetID());
+                            Mesh* primitive = Mesh::Initialize(shader->GetID());
 
                             if (!primitive)
                             {
@@ -897,7 +894,6 @@ namespace MetalMetropolis::Test
                                 .vertices = vector<Vertex>(primitiveData.meshData.vertices),
                                 .indices = vector<u32>(primitiveData.meshData.indices)
                             });
-                            primitive->SetColor(vec4(primitiveData.matData.baseColor));
 
                             Transform3D& mt = primitive->GetTransform();
                             mt.setpos(nodeData.transform.getpos(PosTarget::POS_LOCAL));
@@ -905,6 +901,27 @@ namespace MetalMetropolis::Test
                             mt.setsize(nodeData.transform.getsize(SizeTarget::SIZE_LOCAL));
 
                             primitive->FlipFaceDirection();
+
+                            const ImportMaterialData& matData = primitiveData.matData;
+
+                            primitive->SetColor(vec4(matData.baseColor));
+
+                            if (matData.alphaMode != AlphaMode::A_OPAQUE)
+                            {
+                                primitive->SetAlphaMode(matData.alphaMode);
+                                primitive->SetAlphaCutoff(matData.alphaCutoff);
+                            }
+
+                            if (!matData.textureData.pixelData.empty())
+                            {
+                                Texture* meshTex = Texture::Initialize(shader->GetID());
+
+                                meshTex->SetPixelData(vector<u8>(matData.textureData.pixelData));
+                                meshTex->SetSize(matData.textureData.size);
+                                meshTex->SetPixelFormat(matData.textureData.pixelFormat);
+
+                                primitive->SetTextureID(meshTex->GetID());
+                            }
 
                             importedMeshes.push_back(primitive);
 

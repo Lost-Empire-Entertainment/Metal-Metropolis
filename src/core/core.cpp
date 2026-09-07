@@ -71,7 +71,6 @@ using KalaGraphics::Graphics::TextureData;
 using KalaGraphics::Graphics::TexturePixelFormat;
 using KalaGraphics::Graphics::TextureFilterMode;
 using KalaGraphics::Graphics::TextureWrapMode;
-using KalaGraphics::Graphics::FALLBACK_TEXTURE;
 using KalaGraphics::Graphics::Camera;
 using KalaGraphics::Import::ImportFont;
 using KalaGraphics::Import::ImportTextureData;
@@ -121,8 +120,6 @@ static Camera* vp1_Cam2D_primary{};
 //static Camera* vp2_Cam3D_primary{};
 //static Camera* vp2_Cam2D_primary{};
 
-static Texture* vp1_Tex_white{};
-static Texture* vp1_Tex_fallback{};
 static Texture* vp1_Tex_fallback_groundTest{};
 
 static vector<Mesh*> vp1_Mesh3D_importedMeshes{};
@@ -253,24 +250,19 @@ void ElypsoEngine::Core::Init()
     // CREATE TEXTURES
     //
 
-    vp1_Tex_white = Examples::Test_Create_Texture(vp1_Shader3D_primary);
-
-    vp1_Tex_fallback = Examples::Test_Create_Texture(
-        vp1_Shader3D_primary,
-        {
-            .pixelData = vector<u8>(
-                FALLBACK_TEXTURE.begin(), 
-                FALLBACK_TEXTURE.end()),
-            .filterMode = TextureFilterMode::FILTER_NEAREST,
-            .size = 16
-        });
+    Texture* fallbackTex{};
+    err = Texture::GetRegistry().GetContent(vp1_Shader3D_primary->GetFallbackTextureID(), fallbackTex);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to get fallback texture from shader '" + to_string(vp1_Shader3D_primary->GetID()) + "'! Reason: " + err);
+    }
 
     vp1_Tex_fallback_groundTest = Examples::Test_Create_Texture(
         vp1_Shader3D_primary,
         {
-            .pixelData = vector<u8>(
-                FALLBACK_TEXTURE.begin(), 
-                FALLBACK_TEXTURE.end()),
+            .pixelData = vector<u8>(fallbackTex->GetPixelData()),
             .filterMode = TextureFilterMode::FILTER_NEAREST,
             .wrapMode = TextureWrapMode::WRAP_REPEAT,
             .size = 16

@@ -18,13 +18,20 @@
 #include "core/ee_core.hpp"
 #include "core/kw_core.hpp"
 #include "graphics/kw_window_global.hpp"
+#include "import/kg_import_mesh.hpp"
+#include "import/kg_import_texture.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
 
 using KalaHeaders::KalaMath::vec2;
 using KalaHeaders::KalaMath::vec3;
+using KalaHeaders::KalaMath::vec4;
 using KalaHeaders::KalaMath::Transform2D;
+using KalaHeaders::KalaMath::Transform3D;
+using KalaHeaders::KalaMath::PosTarget;
+using KalaHeaders::KalaMath::RotTarget;
+using KalaHeaders::KalaMath::SizeTarget;
 
 using KalaHeaders::KalaString::IsAlpha;
 using KalaHeaders::KalaString::IsNumber;
@@ -49,9 +56,18 @@ using KalaGraphics::Resources::NormalType;
 using KalaGraphics::Resources::Mesh_Cube;
 using KalaGraphics::Resources::Mesh_Pyramid;
 using KalaGraphics::Resources::Mesh_Sphere;
+using KalaGraphics::Resources::Vertex;
 using KalaGraphics::Resources::TextureFilterMode;
+using KalaGraphics::Resources::TexturePixelFormat;
 using KalaGraphics::Import::FontData;
 using KalaGraphics::Import::GlyphData;
+using KalaGraphics::Import::ImportMeshData;
+using KalaGraphics::Import::ImportMaterialData;
+using KalaGraphics::Import::ImportPrimitiveData;
+using KalaGraphics::Import::ImportNodeData;
+using KalaGraphics::Import::ImportMesh;
+using KalaGraphics::Import::ImportTextureData;
+using KalaGraphics::Import::ImportTexture;
 
 using std::string;
 using std::to_string;
@@ -808,5 +824,156 @@ namespace MetalMetropolis::Test
         }
 
         return cam;
+    }
+
+    void Examples::Test_Import_Meshes(
+        Input* input,
+        Texture* texture,
+        Shader* shader)
+    {
+        static vector<Mesh*> importedMeshes{};
+
+        if (input->IsKeyPressed(KeyboardButton::K_SPACE))
+        {
+            vector<path> files = Window_Global::GetFiles(
+                FileType::FILE_CUSTOM,
+                {
+                    ".glb",
+                    ".gltf"
+                    });
+
+            if (files.empty())
+            {
+                Log::Print(
+                    "Failed to import glb/gltf file because none was selected!",
+                    "GAME_CORE",
+                    LogType::LOG_ERROR,
+                    2);
+
+                return;
+            }
+            else
+            {
+                ImportMesh* importMesh = ImportMesh::Initialize(path(files.front()));
+                if (!importMesh)
+                {
+                    Log::Print(
+                        "Failed to import mesh from path '" + files.front().string() + "'!",
+                        "GAME_CORE",
+                        LogType::LOG_ERROR,
+                        2);
+
+                    return;
+                }
+                else
+                {
+                    vector<u32> meshIDs{};
+
+                    if (!importedMeshes.empty())
+                    {
+                        for (Mesh* m : importedMeshes) m->Destroy();
+                        importedMeshes.clear();
+                    }
+
+                    for (const ImportNodeData& nodeData : importMesh->GetMeshData())
+                    {
+                        for (const ImportPrimitiveData& primitiveData : nodeData.primitiveData)
+                        {
+                            Mesh* primitive = Mesh::Initialize(
+                                shader->GetID(), 
+                                texture->GetID());
+
+                            if (!primitive)
+                            {
+                                KalaWindowCore::ForceClose(
+                                    "Metal Metropolis core error",
+                                    "Failed to import model '" + files.front().string() 
+                                    + "' because one of its primitives failed to initialize!");
+                            }
+
+                            primitive->SetMeshData(
+                            {
+                                .vertices = vector<Vertex>(primitiveData.meshData.vertices),
+                                .indices = vector<u32>(primitiveData.meshData.indices)
+                            });
+                            primitive->SetColor(vec4(primitiveData.matData.baseColor));
+
+                            Transform3D& mt = primitive->GetTransform();
+                            mt.setpos(nodeData.transform.getpos(PosTarget::POS_LOCAL));
+                            mt.setrotquat(nodeData.transform.getrotquat(RotTarget::ROT_LOCAL));
+                            mt.setsize(nodeData.transform.getsize(SizeTarget::SIZE_LOCAL));
+
+                            primitive->FlipFaceDirection();
+
+                            importedMeshes.push_back(primitive);
+
+                            meshIDs.push_back(primitive->GetID());
+                        }
+                    }
+
+                    /*
+                    ExportMesh::ExportMeshes(meshIDs, path(
+                        files.front().parent_path() 
+                        / (files.front().stem().string() + "_1.glb")));
+
+                    Log::Print(
+                        "@@@@@\n"
+                        "json data:\n" + ExportMesh::GetJsonData(meshIDs));
+                    */
+                }
+            }
+        }
+    }
+
+    void Examples::Test_Import_Texture(
+        Input* input,
+        Mesh* mesh,
+        Texture* texture)
+    {
+        if (input->IsKeyPressed(KeyboardButton::K_SPACE))
+        {
+            static ImportTexture* importTex{};
+
+            if (importTex) importTex->Destroy();
+
+            vector<path> files = Window_Global::GetFiles(
+                FileType::FILE_CUSTOM,
+                { ".png" });
+
+            if (files.empty())
+            {
+                Log::Print(
+                    "Failed to import png texture because none was selected!",
+                    "GAME_CORE",
+                    LogType::LOG_ERROR,
+                    2);
+
+                return;
+            }
+
+            importTex = ImportTexture::Initialize(path(files.front()));
+
+            if (!importTex)
+            {
+                KalaWindowCore::ForceClose(
+                    "Metal Metropolis core error",
+                    "Failed to import png texture from file '" + files.front().string() + "'!");
+            }
+
+            const ImportTextureData& texData = importTex->GetTextureData();
+
+            texture->SetPixelData(vector<u8>(texData.pixelData));
+            texture->SetPixelFormat(texData.pixelFormat);
+            texture->SetSize(texData.size);
+
+            bool isTransparent = 
+                texture->GetPixelFormat() == TexturePixelFormat::FORMAT_BASIC_R8G8B8A8
+                || texture->GetPixelFormat() == TexturePixelFormat::FORMAT_SRGB_R8G8B8A8;
+
+            if (mesh->IsTransparent() != isTransparent)
+            {
+                mesh->SetTransparentState(isTransparent);
+            }
+        }
     }
 }

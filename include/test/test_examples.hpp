@@ -117,5 +117,15 @@ namespace MetalMetropolis::Test
             MeshData&& meshData);
 
         static Camera* Test_Create_Camera(Shader* shader);
+
+        static void Test_Import_Meshes(
+            Input* input,
+            Texture* texture,
+            Shader* shader);
+
+        static void Test_Import_Texture(
+            Input* input,
+            Mesh* mesh,
+            Texture* texture);
     };
 }

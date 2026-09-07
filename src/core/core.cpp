@@ -26,8 +26,7 @@
 #include "resources/kg_texture.hpp"
 #include "resources/kg_camera.hpp"
 #include "import/kg_import_font.hpp"
-#include "import/kg_import_mesh.hpp"
-#include "export/kg_export_mesh.hpp"
+#include "import/kg_import_texture.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -60,10 +59,11 @@ using KalaGraphics::Core::ViewportType;
 using KalaGraphics::Core::Shader;
 using KalaGraphics::Core::HitTest;
 using KalaGraphics::Resources::AnchorPosition;
-using KalaGraphics::Resources::Mesh;
 using KalaGraphics::Resources::Mesh_Cube;
 using KalaGraphics::Resources::Mesh_Pyramid;
 using KalaGraphics::Resources::Mesh_Sphere;
+using KalaGraphics::Resources::MeshData;
+using KalaGraphics::Resources::Mesh;
 using KalaGraphics::Resources::Vertex;
 using KalaGraphics::Resources::Texture;
 using KalaGraphics::Resources::TextureData;
@@ -73,10 +73,8 @@ using KalaGraphics::Resources::TextureWrapMode;
 using KalaGraphics::Resources::FALLBACK_TEXTURE;
 using KalaGraphics::Resources::Camera;
 using KalaGraphics::Import::ImportFont;
-using KalaGraphics::Import::ImportPrimitiveData;
-using KalaGraphics::Import::ImportNodeData;
-using KalaGraphics::Import::ImportMesh;
-using KalaGraphics::Export::ExportMesh;
+using KalaGraphics::Import::ImportTextureData;
+using KalaGraphics::Import::ImportTexture;
 
 using std::string;
 using std::filesystem::path;
@@ -99,7 +97,6 @@ static constexpr array<vec4, 6> colors
 */
 
 //static ImportFont* font{};
-static ImportMesh* importMesh{};
 
 static EngineWindow* ew1{};
 static GraphicsContext* ew1_gctx{};
@@ -648,93 +645,36 @@ void ElypsoEngine::Core::Update()
         vp1_Cam3D_primary,
         EngineCore::GetDeltaTime());
 
-    if (ew1_pw_input->IsKeyPressed(KeyboardButton::K_SPACE))
+    /*
+    Examples::Test_Import_Meshes(
+        ew1_pw_input,
+        vp1_Tex_white,
+        vp1_Shader3D_primary);
+    */
+    
+    static Texture* cubeTex{};
+    static Mesh* cubeMesh{};
+
+    if (!cubeTex)
     {
-        vector<path> files = Window_Global::GetFiles(
-            FileType::FILE_CUSTOM,
-            {
-                ".glb",
-                ".gltf"
-                });
-
-        if (files.empty())
-        {
-            Log::Print(
-                "Failed to import glb/gltf file because none was selected!",
-                "GAME_CORE",
-                LogType::LOG_ERROR,
-                2);
-        }
-        else
-        {
-            importMesh = ImportMesh::Initialize(path(files.front()));
-            if (!importMesh)
-            {
-                Log::Print(
-                    "Failed to import mesh from path '" + files.front().string() + "'!",
-                    "GAME_CORE",
-                    LogType::LOG_ERROR,
-                    2);
-            }
-            else
-            {
-                if (!vp1_Mesh3D_importedMeshes.empty())
-                {
-                    for (Mesh* m : vp1_Mesh3D_importedMeshes)
-                    {
-                        m->Destroy();
-                    }
-                }
-                vp1_Mesh3D_importedMeshes.clear();
-
-                vector<u32> meshIDs{};
-
-                for (const ImportNodeData& nodeData : importMesh->GetMeshData())
-                {
-                    for (const ImportPrimitiveData& primitiveData : nodeData.primitiveData)
-                    {
-                        Mesh* primitive = Mesh::Initialize(
-                            vp1_Shader3D_primary->GetID(), 
-                            vp1_Tex_white->GetID());
-
-                        if (!primitive)
-                        {
-                            KalaWindowCore::ForceClose(
-                                "Metal Metropolis core error",
-                                "Failed to import model '" + files.front().string() 
-                                + "' because one of its primitives failed to initialize!");
-                        }
-
-                        primitive->SetMeshData(
-                        {
-                            .vertices = vector<Vertex>(primitiveData.meshData.vertices),
-                            .indices = vector<u32>(primitiveData.meshData.indices)
-                        });
-                        primitive->SetColor(vec4(primitiveData.matData.baseColor));
-
-                        Transform3D& mt = primitive->GetTransform();
-                        mt.setpos(nodeData.transform.getpos(PosTarget::POS_LOCAL));
-                        mt.setrotquat(nodeData.transform.getrotquat(RotTarget::ROT_LOCAL));
-                        mt.setsize(nodeData.transform.getsize(SizeTarget::SIZE_LOCAL));
-
-                        primitive->FlipFaceDirection();
-
-                        vp1_Mesh3D_importedMeshes.push_back(primitive);
-
-                        meshIDs.push_back(primitive->GetID());
-                    }
-                }
-
-                ExportMesh::ExportMeshes(meshIDs, path(
-                    files.front().parent_path() 
-                    / (files.front().stem().string() + "_1.glb")));
-
-                Log::Print(
-                    "@@@@@\n"
-                    "json data:\n" + ExportMesh::GetJsonData(meshIDs));
-            }
-        }
+        cubeTex = Texture::Initialize(vp1_Shader3D_primary->GetID());
     }
+    if (!cubeMesh)
+    {
+        cubeMesh = Mesh::Initialize(
+            vp1_Shader3D_primary->GetID(),
+            cubeTex->GetID());
+
+        MeshData cubeData = Mesh::GenerateMeshData(Mesh_Cube{ .edgeCount = 4 });
+
+        cubeMesh->SetMeshData(MeshData(cubeData));
+        scast<Transform3D&>(cubeMesh->GetTransform()).addpos({ 0.0f, 0.5f, 0.0f });
+    }
+
+    Examples::Test_Import_Texture(
+        ew1_pw_input,
+        cubeMesh,
+        cubeTex);
 
     /*
     Examples::Test_Create_Notification(ew1_pw_input);

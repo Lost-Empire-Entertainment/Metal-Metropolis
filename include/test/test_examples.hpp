@@ -10,28 +10,28 @@
 
 #include "core/kw_input.hpp"
 #include "graphics/kw_window.hpp"
-#include "core/kg_context.hpp"
-#include "core/kg_viewport.hpp"
-#include "core/kg_hit_test.hpp"
-#include "core/kg_shader.hpp"
-#include "resources/kg_mesh.hpp"
-#include "resources/kg_texture.hpp"
-#include "resources/kg_camera.hpp"
+#include "graphics/kg_context.hpp"
+#include "graphics/kg_viewport.hpp"
+#include "graphics/kg_hit_test.hpp"
+#include "graphics/kg_shader.hpp"
+#include "graphics/kg_mesh.hpp"
+#include "graphics/kg_texture.hpp"
+#include "graphics/kg_camera.hpp"
 #include "import/kg_import_font.hpp"
 
 namespace MetalMetropolis::Test
 {
     using KalaWindow::Core::Input;
     using KalaWindow::Graphics::ProcessWindow;
-    using KalaGraphics::Core::GraphicsContext;
-    using KalaGraphics::Core::Viewport;
-    using KalaGraphics::Core::HitTest;
-    using KalaGraphics::Core::Shader;
-    using KalaGraphics::Resources::Mesh;
-    using KalaGraphics::Resources::MeshData;
-    using KalaGraphics::Resources::Texture;
-    using KalaGraphics::Resources::TextureData;
-    using KalaGraphics::Resources::Camera;
+    using KalaGraphics::Graphics::GraphicsContext;
+    using KalaGraphics::Graphics::Viewport;
+    using KalaGraphics::Graphics::HitTest;
+    using KalaGraphics::Graphics::Shader;
+    using KalaGraphics::Graphics::Mesh;
+    using KalaGraphics::Graphics::MeshData;
+    using KalaGraphics::Graphics::Texture;
+    using KalaGraphics::Graphics::TextureData;
+    using KalaGraphics::Graphics::Camera;
     using KalaGraphics::Import::ImportFont;
 
     using std::array;

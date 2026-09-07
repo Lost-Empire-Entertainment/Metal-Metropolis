@@ -18,13 +18,13 @@
 #include "graphics/kw_window.hpp"
 #include "core/kw_input.hpp"
 #include "core/kw_core.hpp"
-#include "core/kg_context.hpp"
-#include "core/kg_viewport.hpp"
-#include "core/kg_hit_test.hpp"
-#include "core/kg_shader.hpp"
-#include "resources/kg_mesh.hpp"
-#include "resources/kg_texture.hpp"
-#include "resources/kg_camera.hpp"
+#include "graphics/kg_context.hpp"
+#include "graphics/kg_viewport.hpp"
+#include "graphics/kg_hit_test.hpp"
+#include "graphics/kg_shader.hpp"
+#include "graphics/kg_mesh.hpp"
+#include "graphics/kg_texture.hpp"
+#include "graphics/kg_camera.hpp"
 #include "import/kg_import_font.hpp"
 #include "import/kg_import_texture.hpp"
 
@@ -52,26 +52,27 @@ using KalaWindow::Graphics::FileType;
 using KalaWindow::Graphics::ProcessWindow;
 using KalaWindow::Core::Input;
 using KalaWindow::Core::KalaWindowCore;
-using KalaGraphics::Core::GraphicsContext;
-using KalaGraphics::Core::RootShaderTarget;
-using KalaGraphics::Core::Viewport;
-using KalaGraphics::Core::ViewportType;
-using KalaGraphics::Core::Shader;
-using KalaGraphics::Core::HitTest;
-using KalaGraphics::Resources::AnchorPosition;
-using KalaGraphics::Resources::Mesh_Cube;
-using KalaGraphics::Resources::Mesh_Pyramid;
-using KalaGraphics::Resources::Mesh_Sphere;
-using KalaGraphics::Resources::MeshData;
-using KalaGraphics::Resources::Mesh;
-using KalaGraphics::Resources::Vertex;
-using KalaGraphics::Resources::Texture;
-using KalaGraphics::Resources::TextureData;
-using KalaGraphics::Resources::TexturePixelFormat;
-using KalaGraphics::Resources::TextureFilterMode;
-using KalaGraphics::Resources::TextureWrapMode;
-using KalaGraphics::Resources::FALLBACK_TEXTURE;
-using KalaGraphics::Resources::Camera;
+using KalaGraphics::Graphics::GraphicsContext;
+using KalaGraphics::Graphics::RootShaderTarget;
+using KalaGraphics::Graphics::Viewport;
+using KalaGraphics::Graphics::ViewportType;
+using KalaGraphics::Graphics::Shader;
+using KalaGraphics::Graphics::HitTest;
+using KalaGraphics::Graphics::AnchorPosition;
+using KalaGraphics::Graphics::Mesh_Cube;
+using KalaGraphics::Graphics::Mesh_Pyramid;
+using KalaGraphics::Graphics::Mesh_Sphere;
+using KalaGraphics::Graphics::MeshData;
+using KalaGraphics::Graphics::AlphaMode;
+using KalaGraphics::Graphics::Mesh;
+using KalaGraphics::Graphics::Vertex;
+using KalaGraphics::Graphics::Texture;
+using KalaGraphics::Graphics::TextureData;
+using KalaGraphics::Graphics::TexturePixelFormat;
+using KalaGraphics::Graphics::TextureFilterMode;
+using KalaGraphics::Graphics::TextureWrapMode;
+using KalaGraphics::Graphics::FALLBACK_TEXTURE;
+using KalaGraphics::Graphics::Camera;
 using KalaGraphics::Import::ImportFont;
 using KalaGraphics::Import::ImportTextureData;
 using KalaGraphics::Import::ImportTexture;
@@ -675,6 +676,32 @@ void ElypsoEngine::Core::Update()
         ew1_pw_input,
         cubeMesh,
         cubeTex);
+
+    if (ew1_pw_input->IsKeyPressed(KeyboardButton::K_Z))
+    {
+        if (!cubeMesh)
+        {
+            Log::Print("@@@@@ there is no cube mesh to test alpha mode switch with...");
+        }
+        else
+        {
+            AlphaMode alphaMode = cubeMesh->GetAlphaMode();
+
+            switch (alphaMode)
+            {
+            default:
+            case AlphaMode::A_OPAQUE:
+                cubeMesh->SetAlphaMode(AlphaMode::A_BLEND);
+                break;
+            case AlphaMode::A_BLEND:
+                cubeMesh->SetAlphaMode(AlphaMode::A_MASK);
+                break;
+            case AlphaMode::A_MASK:
+                cubeMesh->SetAlphaMode(AlphaMode::A_OPAQUE);
+                break;
+            }
+        }
+    }
 
     /*
     Examples::Test_Create_Notification(ew1_pw_input);

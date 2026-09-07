@@ -50,15 +50,16 @@ using KalaWindow::Graphics::PopupAction;
 using KalaWindow::Graphics::PopupType;
 using KalaWindow::Graphics::WindowMode;
 using KalaWindow::Core::InputCode;
-using KalaGraphics::Core::VSyncState;
-using KalaGraphics::Resources::FaceDirection;
-using KalaGraphics::Resources::NormalType;
-using KalaGraphics::Resources::Mesh_Cube;
-using KalaGraphics::Resources::Mesh_Pyramid;
-using KalaGraphics::Resources::Mesh_Sphere;
-using KalaGraphics::Resources::Vertex;
-using KalaGraphics::Resources::TextureFilterMode;
-using KalaGraphics::Resources::TexturePixelFormat;
+using KalaGraphics::Graphics::VSyncState;
+using KalaGraphics::Graphics::FaceDirection;
+using KalaGraphics::Graphics::NormalType;
+using KalaGraphics::Graphics::Mesh_Cube;
+using KalaGraphics::Graphics::Mesh_Pyramid;
+using KalaGraphics::Graphics::Mesh_Sphere;
+using KalaGraphics::Graphics::AlphaMode;
+using KalaGraphics::Graphics::Vertex;
+using KalaGraphics::Graphics::TextureFilterMode;
+using KalaGraphics::Graphics::TexturePixelFormat;
 using KalaGraphics::Import::FontData;
 using KalaGraphics::Import::GlyphData;
 using KalaGraphics::Import::ImportMeshData;
@@ -970,9 +971,10 @@ namespace MetalMetropolis::Test
                 texture->GetPixelFormat() == TexturePixelFormat::FORMAT_BASIC_R8G8B8A8
                 || texture->GetPixelFormat() == TexturePixelFormat::FORMAT_SRGB_R8G8B8A8;
 
-            if (mesh->IsTransparent() != isTransparent)
+            if (isTransparent != (mesh->GetAlphaMode() == AlphaMode::A_BLEND
+                || mesh->GetAlphaMode() == AlphaMode::A_MASK))
             {
-                mesh->SetTransparentState(isTransparent);
+                mesh->SetAlphaMode(isTransparent ? AlphaMode::A_BLEND : AlphaMode::A_OPAQUE);
             }
         }
     }

@@ -27,6 +27,7 @@
 #include "graphics/kg_camera.hpp"
 #include "import/kg_import_font.hpp"
 #include "import/kg_import_texture.hpp"
+#include "core/kg_export_object.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -75,6 +76,7 @@ using KalaGraphics::Graphics::Camera;
 using KalaGraphics::Import::ImportFont;
 using KalaGraphics::Import::ImportTextureData;
 using KalaGraphics::Import::ImportTexture;
+using KalaGraphics::Core::Export;
 
 using std::string;
 using std::filesystem::path;
@@ -656,9 +658,11 @@ void ElypsoEngine::Core::Update()
         vp1_Cam3D_primary,
         EngineCore::GetDeltaTime());
 
+    /*
     Examples::Test_Import_Meshes(
         ew1_pw_input,
         vp1_Shader3D_primary);
+    */
     
     /*
     static Texture* cubeTex{};
@@ -711,6 +715,67 @@ void ElypsoEngine::Core::Update()
         }
     }
     */
+
+    if (ew1_pw_input->IsKeyPressed(KeyboardButton::K_SPACE))
+    {
+        static ImportTexture* importTex{};
+        if (importTex) importTex->Destroy();
+
+        static Texture* targetTex = Texture::Initialize(vp1_Shader3D_primary->GetID());
+        static Mesh* targetMesh = Mesh::Initialize(
+            vp1_Shader2D_primary->GetID(),
+            targetTex->GetID());
+
+        static bool hasInitialized{};
+        if (!hasInitialized)
+        {
+            targetMesh->SetViewportAnchorPosition(AnchorPosition::P_TOP_LEFT);
+            targetMesh->SetLocalAnchorPosition(AnchorPosition::P_TOP_LEFT);
+
+            targetTex->SetFilterMode(TextureFilterMode::FILTER_NEAREST);
+
+            vec2 targetSize{ 256 };
+            
+            scast<Transform2D&>(targetMesh->GetTransform()).setsize(targetSize);
+
+            hasInitialized = true;
+        }
+
+        vector<path> files = Window_Global::GetFiles(
+            FileType::FILE_CUSTOM,
+            { ".png" });
+
+        if (files.empty())
+        {
+            Log::Print(
+                "Failed to import png texture because none was selected!",
+                "GAME_CORE",
+                LogType::LOG_ERROR,
+                2);
+
+            return;
+        }
+
+        importTex = ImportTexture::Initialize(path(files.front()));
+
+        if (!importTex)
+        {
+            KalaWindowCore::ForceClose(
+                "Metal Metropolis core error",
+                "Failed to import png texture from file '" + files.front().string() + "'!");
+        }
+
+        const ImportTextureData& texData = importTex->GetTextureData();
+
+        targetTex->SetPixelData(vector<u8>(texData.pixelData));
+        targetTex->SetPixelFormat(texData.pixelFormat);
+        targetTex->SetSize(texData.size);
+
+        Export::ExportTexture(
+            targetTex->GetID(),
+            files.front().parent_path() 
+            / (files.front().stem().string() + "_1.png"));
+    }
 
     /*
     Examples::Test_Create_Notification(ew1_pw_input);

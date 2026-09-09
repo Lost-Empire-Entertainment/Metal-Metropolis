@@ -20,6 +20,7 @@
 #include "graphics/kw_window_global.hpp"
 #include "import/kg_import_mesh.hpp"
 #include "import/kg_import_texture.hpp"
+#include "core/kg_export_object.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -69,6 +70,7 @@ using KalaGraphics::Import::ImportNodeData;
 using KalaGraphics::Import::ImportMesh;
 using KalaGraphics::Import::ImportTextureData;
 using KalaGraphics::Import::ImportTexture;
+using KalaGraphics::Core::Export;
 
 using std::string;
 using std::to_string;
@@ -934,13 +936,13 @@ namespace MetalMetropolis::Test
                     }
 
                     /*
-                    ExportMesh::ExportMeshes(meshIDs, path(
+                    Export::ExportMeshes(meshIDs, path(
                         files.front().parent_path() 
                         / (files.front().stem().string() + "_1.glb")));
 
                     Log::Print(
                         "@@@@@\n"
-                        "json data:\n" + ExportMesh::GetJsonData(meshIDs));
+                        "json data:\n" + Export::GetMeshJsonData(meshIDs));
                     */
                 }
             }

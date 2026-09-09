@@ -658,32 +658,11 @@ void ElypsoEngine::Core::Update()
         vp1_Cam3D_primary,
         EngineCore::GetDeltaTime());
 
-    /*
     Examples::Test_Import_Meshes(
         ew1_pw_input,
         vp1_Shader3D_primary);
-    */
-    
+
     /*
-    static Texture* cubeTex{};
-    static Mesh* cubeMesh{};
-
-    if (!cubeTex)
-    {
-        cubeTex = Texture::Initialize(vp1_Shader3D_primary->GetID());
-    }
-    if (!cubeMesh)
-    {
-        cubeMesh = Mesh::Initialize(
-            vp1_Shader3D_primary->GetID(),
-            cubeTex->GetID());
-
-        MeshData cubeData = Mesh::GenerateMeshData(Mesh_Cube{ .edgeCount = 4 });
-
-        cubeMesh->SetMeshData(MeshData(cubeData));
-        scast<Transform3D&>(cubeMesh->GetTransform()).addpos({ 0.0f, 0.5f, 0.0f });
-    }
-
     Examples::Test_Import_Texture(
         ew1_pw_input,
         cubeMesh,

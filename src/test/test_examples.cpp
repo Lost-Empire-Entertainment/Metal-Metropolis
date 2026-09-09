@@ -909,7 +909,11 @@ namespace MetalMetropolis::Test
                             if (matData.alphaMode != AlphaMode::A_OPAQUE)
                             {
                                 primitive->SetAlphaMode(matData.alphaMode);
-                                primitive->SetAlphaCutoff(matData.alphaCutoff);
+
+                                if (matData.alphaMode == AlphaMode::A_MASK)
+                                {
+                                    primitive->SetAlphaCutoff(matData.alphaCutoff);
+                                }
                             }
 
                             if (!matData.textureData.pixelData.empty())

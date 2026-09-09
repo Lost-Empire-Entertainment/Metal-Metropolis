@@ -224,7 +224,7 @@ void ElypsoEngine::Core::Init()
             "Failed to get root texture from shader '" + to_string(vp1_Shader3D_primary->GetID()) + "'! Reason: " + err);
     }
 
-    err = Texture::GetRegistry().GetContent(vp1_Shader3D_primary->GetRootTextureID(), vp1_Tex_fallback);
+    err = Texture::GetRegistry().GetContent(vp1_Shader3D_primary->GetFallbackTextureID(), vp1_Tex_fallback);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
@@ -716,6 +716,7 @@ void ElypsoEngine::Core::Update()
     }
     */
 
+    /*
     if (ew1_pw_input->IsKeyPressed(KeyboardButton::K_SPACE))
     {
         static ImportTexture* importTex{};
@@ -776,6 +777,7 @@ void ElypsoEngine::Core::Update()
             files.front().parent_path() 
             / (files.front().stem().string() + "_1.png"));
     }
+    */
 
     /*
     Examples::Test_Create_Notification(ew1_pw_input);

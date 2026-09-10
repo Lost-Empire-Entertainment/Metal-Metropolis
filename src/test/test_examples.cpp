@@ -771,7 +771,6 @@ namespace MetalMetropolis::Test
 
     Mesh* Examples::Test_Create_Mesh(
         Shader* shader,
-        Texture* texture,
         MeshData&& meshData)
     {
         //sync ids before generating mesh
@@ -793,8 +792,6 @@ namespace MetalMetropolis::Test
                 "Game core error",
                 "Failed to initialize test mesh because its material was invalid! Reason: " + err);
         }
-
-        mat->SetBaseColorTextureID(texture->GetID());
 
         if (!mesh->Is2D()) mesh->SetMeshData(std::move(meshData));
 

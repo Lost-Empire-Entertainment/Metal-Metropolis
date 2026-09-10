@@ -113,7 +113,6 @@ namespace MetalMetropolis::Test
 
         static Mesh* Test_Create_Mesh(
             Shader* shader,
-            Texture* texture,
             MeshData&& meshData);
 
         static Camera* Test_Create_Camera(Shader* shader);

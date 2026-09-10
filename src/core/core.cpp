@@ -7,6 +7,8 @@
 
 #include "log_utils.hpp"
 #include "math_utils.hpp"
+#include "string_utils.hpp"
+#include "key_standards.hpp"
 
 #include "test/test_examples.hpp"
 
@@ -26,6 +28,7 @@
 #include "graphics/kg_camera.hpp"
 #include "graphics/kg_material.hpp"
 #include "import/kg_import_font.hpp"
+#include "widgets_primitive/kg_widget_text.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -35,6 +38,12 @@ using KalaHeaders::KalaMath::vec4;
 using KalaHeaders::KalaMath::vec3;
 using KalaHeaders::KalaMath::Transform3D;
 using KalaHeaders::KalaMath::Transform2D;
+
+using KalaHeaders::KalaString::IsAlpha;
+using KalaHeaders::KalaString::IsNumber;
+
+using KalaHeaders::KalaKeyStandards::KeyboardButton;
+using KalaHeaders::KalaKeyStandards::GetValueByKey;
 
 using MetalMetropolis::Test::Examples;
 
@@ -53,6 +62,7 @@ using KalaGraphics::Graphics::AnchorPosition;
 using KalaGraphics::Graphics::Mesh_Cube;
 using KalaGraphics::Graphics::Mesh;
 using KalaGraphics::Graphics::Vertex;
+using KalaGraphics::Graphics::MaterialType2D;
 using KalaGraphics::Graphics::Material;
 using KalaGraphics::Graphics::Texture;
 using KalaGraphics::Graphics::TexturePixelFormat;
@@ -60,8 +70,10 @@ using KalaGraphics::Graphics::TextureFilterMode;
 using KalaGraphics::Graphics::TextureWrapMode;
 using KalaGraphics::Graphics::Camera;
 using KalaGraphics::Import::ImportFont;
+using KalaGraphics::PrimitiveWidgets::Text;
 
 using std::string;
+using std::string_view;
 using std::filesystem::path;
 using std::vector;
 
@@ -253,8 +265,18 @@ void ElypsoEngine::Core::Init()
 
     vp1_Mesh3D_groundTest = Examples::Test_Create_Mesh(
         vp1_Shader3D_primary,
-        vp1_Tex_fallback_groundTest,
         Mesh::GenerateMeshData(Mesh_Cube{.edgeCount = 4}));
+
+    Material* groundMeshMat{};
+    err = Material::GetRegistry().GetContent(vp1_Mesh3D_groundTest->GetMaterialID(), groundMeshMat);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to initialize ground mesh because its material was invalid! Reason: " + err);
+    }
+
+    groundMeshMat->SetBaseColorTextureID(vp1_Tex_fallback_groundTest->GetID());
 
     vector<Vertex> vertices = vp1_Mesh3D_groundTest->GetVertices();
     vector<u32> indices = vp1_Mesh3D_groundTest->GetIndices();
@@ -278,6 +300,8 @@ void ElypsoEngine::Core::Init()
     // CREATE FONT MESH
     //
 
+    /*
+
     string _ = Shader::GetRegistry().GetContent(
         ew1_gctx_vp1->GetRootShaderID(RootShaderTarget::T_FONT),
         vp1_Shader2D_font);
@@ -291,11 +315,10 @@ void ElypsoEngine::Core::Init()
 
     vp1_Mesh2D_font = Examples::Test_Create_Mesh(
         vp1_Shader2D_font,
-        vp1_Tex_font,
         {});
 
-    Material* mat{};
-    err = Material::GetRegistry().GetContent(vp1_Mesh2D_font->GetMaterialID(), mat);
+    Material* fontMeshMat{};
+    err = Material::GetRegistry().GetContent(vp1_Mesh2D_font->GetMaterialID(), fontMeshMat);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
@@ -303,8 +326,15 @@ void ElypsoEngine::Core::Init()
             "Failed to initialize font mesh because its material was invalid! Reason: " + err);
     }
 
+    //change material type before assigning color
+    fontMeshMat->SetMaterial2DType(MaterialType2D::M_FONT);
+
     //font color is black
-    mat->SetBaseColor( { vec3{ 0.0f }, 1.0f } );
+    fontMeshMat->SetBaseColor( { vec3{ 0.0f }, 1.0f } );
+
+    fontMeshMat->SetBaseColorTextureID(vp1_Tex_font->GetID());
+
+    //assign texture to new slot
 
     scast<Transform2D&>(vp1_Mesh2D_font->GetTransform()).setsize(50);
     vp1_Mesh2D_font->SetViewportAnchorPosition(AnchorPosition::P_TOP_RIGHT);
@@ -316,8 +346,18 @@ void ElypsoEngine::Core::Init()
 
     vp1_Mesh2D_fontBackground = Examples::Test_Create_Mesh(
         vp1_Shader2D_primary,
-        vp1_Tex_fontBackground,
         {});
+
+    Material* fontBackgroundMat{};
+    err = Material::GetRegistry().GetContent(vp1_Mesh2D_fontBackground->GetMaterialID(), fontBackgroundMat);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to initialize font background mesh because its material was invalid! Reason: " + err);
+    }
+
+    fontBackgroundMat->SetBaseColorTextureID(vp1_Tex_fontBackground->GetID());
 
     scast<Transform2D&>(vp1_Mesh2D_fontBackground->GetTransform()).setsize(50);
     vp1_Mesh2D_fontBackground->SetViewportAnchorPosition(AnchorPosition::P_TOP_RIGHT);
@@ -325,6 +365,7 @@ void ElypsoEngine::Core::Init()
 
     vp1_Mesh2D_font->SetDrawOrderIndex(100);
     vp1_Mesh2D_fontBackground->SetDrawOrderIndex(50);
+    */
 
     //
     // SELECT AND INITIALIZE FONT
@@ -370,11 +411,13 @@ void ElypsoEngine::Core::Init()
             "Failed to import font '" + fontName.string() + "'!");
     }
 
+    /*
     Examples::Test_Print_Glyph_Atlas_To_Texture(
         font,
         vp1_Tex_font,
         vp1_Mesh2D_font,
         vp1_Mesh2D_fontBackground);
+    */
 
     //sync after kg objects are done with initialization
     EngineCore::SyncID();
@@ -399,12 +442,71 @@ void ElypsoEngine::Core::Update()
         vp1_Cam3D_primary,
         EngineCore::GetDeltaTime());
 
+    if (!ew1_pw_input->GetPressedKeys().empty())
+    {
+        static Text* newText{};
+        
+        if (!newText)
+        {
+            newText = Text::Initialize(
+                font->GetID(),
+                ew1_gctx_vp1->GetID());
+
+            Mesh* m{};
+            string err = Mesh::GetRegistry().GetContent(newText->GetMeshID(), m);
+            if (!err.empty())
+            {
+                KalaWindowCore::ForceClose(
+                    "Metal Metropolis core error",
+                    "Failed to initialize text because its mesh '" 
+                    + to_string(newText->GetMeshID()) + "' was invalid! Reason: " + err);
+            }
+
+            m->SetViewportAnchorPosition(AnchorPosition::P_CENTER);
+            m->SetLocalAnchorPosition(AnchorPosition::P_CENTER);
+            scast<Transform2D&>(m->GetTransform()).addpos({ 0.0f, 50.0f });
+        }
+
+        if (ew1_pw_input->IsKeyPressed(KeyboardButton::K_BACKSPACE))
+        {
+            string letters = newText->GetText();
+            if (!letters.empty())
+            {
+                letters.pop_back();
+                newText->SetText(std::move(letters));
+            }
+        }
+        else
+        {
+            string_view letter = GetValueByKey(scast<u32>(ew1_pw_input->GetPressedKeys().front()));
+
+            if (IsAlpha(letter[0])
+                || IsNumber(letter[0]))
+            {
+                string letters = newText->GetText();
+                char frontLetter = letter.front();
+
+                Log::Print("@@@@@ pressed key: " + string{ frontLetter });
+
+                letters.push_back(frontLetter);
+
+                newText->SetText(std::move(letters));
+            }
+            else
+            {
+                Log::Print("@@@@@ ignored letter '" + string(letter) + "'...");
+            }
+        }
+    }
+
+    /*
     Examples::Test_Print_Glyph_To_Texture(
         ew1_pw_input,
         font,
         vp1_Tex_font,
         vp1_Mesh2D_font,
         vp1_Mesh2D_fontBackground);
+    */
 }
 
 void ElypsoEngine::Core::LateUpdate()

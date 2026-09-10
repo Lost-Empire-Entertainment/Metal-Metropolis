@@ -43,7 +43,7 @@ using KalaHeaders::KalaString::IsAlpha;
 using KalaHeaders::KalaString::IsNumber;
 
 using KalaHeaders::KalaKeyStandards::KeyboardButton;
-using KalaHeaders::KalaKeyStandards::GetValueByKey;
+using KalaHeaders::KalaKeyStandards::GetUTFByKey;
 
 using MetalMetropolis::Test::Examples;
 
@@ -442,60 +442,51 @@ void ElypsoEngine::Core::Update()
         vp1_Cam3D_primary,
         EngineCore::GetDeltaTime());
 
-    if (!ew1_pw_input->GetPressedKeys().empty())
+    static Text* newText{};
+    static u32 framesHeld{};
+    
+    if (!newText)
     {
-        static Text* newText{};
-        
-        if (!newText)
+        newText = Text::Initialize(
+            font->GetID(),
+            ew1_gctx_vp1->GetID());
+
+        Mesh* m{};
+        string err = Mesh::GetRegistry().GetContent(newText->GetMeshID(), m);
+        if (!err.empty())
         {
-            newText = Text::Initialize(
-                font->GetID(),
-                ew1_gctx_vp1->GetID());
-
-            Mesh* m{};
-            string err = Mesh::GetRegistry().GetContent(newText->GetMeshID(), m);
-            if (!err.empty())
-            {
-                KalaWindowCore::ForceClose(
-                    "Metal Metropolis core error",
-                    "Failed to initialize text because its mesh '" 
-                    + to_string(newText->GetMeshID()) + "' was invalid! Reason: " + err);
-            }
-
-            m->SetViewportAnchorPosition(AnchorPosition::P_CENTER);
-            m->SetLocalAnchorPosition(AnchorPosition::P_CENTER);
-            scast<Transform2D&>(m->GetTransform()).addpos({ 0.0f, 50.0f });
+            KalaWindowCore::ForceClose(
+                "Metal Metropolis core error",
+                "Failed to initialize text because its mesh '" 
+                + to_string(newText->GetMeshID()) + "' was invalid! Reason: " + err);
         }
 
-        if (ew1_pw_input->IsKeyPressed(KeyboardButton::K_BACKSPACE))
+        m->SetViewportAnchorPosition(AnchorPosition::P_CENTER);
+        m->SetLocalAnchorPosition(AnchorPosition::P_CENTER);
+        scast<Transform2D&>(m->GetTransform()).addpos({ 0.0f, 50.0f });
+    }
+
+    if (ew1_pw_input->IsKeyHeld(KeyboardButton::K_BACKSPACE)
+        || ew1_pw_input->IsKeyPressed(KeyboardButton::K_BACKSPACE))
+    {
+        if (ew1_pw_input->IsKeyHeld(KeyboardButton::K_BACKSPACE))
         {
-            string letters = newText->GetText();
-            if (!letters.empty())
-            {
-                letters.pop_back();
-                newText->SetText(std::move(letters));
-            }
+            if (framesHeld < 50) framesHeld++;
+            else                 newText->RemoveText(1);
         }
         else
         {
-            string_view letter = GetValueByKey(scast<u32>(ew1_pw_input->GetPressedKeys().front()));
+            newText->RemoveText(1);
+        }
 
-            if (IsAlpha(letter[0])
-                || IsNumber(letter[0]))
-            {
-                string letters = newText->GetText();
-                char frontLetter = letter.front();
+    }
+    else
+    {
+        if (framesHeld > 0) framesHeld = 0;
 
-                Log::Print("@@@@@ pressed key: " + string{ frontLetter });
-
-                letters.push_back(frontLetter);
-
-                newText->SetText(std::move(letters));
-            }
-            else
-            {
-                Log::Print("@@@@@ ignored letter '" + string(letter) + "'...");
-            }
+        if (!ew1_pw_input->GetPressedKeys().empty())
+        {
+            newText->AddUTF({ GetUTFByKey(scast<u32>(ew1_pw_input->GetPressedKeys().front())) });
         }
     }
 

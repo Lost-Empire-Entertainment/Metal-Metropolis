@@ -18,6 +18,7 @@
 #include "core/ee_core.hpp"
 #include "core/kw_core.hpp"
 #include "graphics/kw_window_global.hpp"
+#include "graphics/kg_material.hpp"
 #include "import/kg_import_mesh.hpp"
 #include "import/kg_import_texture.hpp"
 #include "core/kg_export_object.hpp"
@@ -52,7 +53,6 @@ using KalaWindow::Graphics::PopupType;
 using KalaWindow::Graphics::WindowMode;
 using KalaWindow::Core::InputCode;
 using KalaGraphics::Graphics::VSyncState;
-using KalaGraphics::Graphics::FaceDirection;
 using KalaGraphics::Graphics::NormalType;
 using KalaGraphics::Graphics::Mesh_Cube;
 using KalaGraphics::Graphics::Mesh_Pyramid;
@@ -61,6 +61,9 @@ using KalaGraphics::Graphics::AlphaMode;
 using KalaGraphics::Graphics::Vertex;
 using KalaGraphics::Graphics::TextureFilterMode;
 using KalaGraphics::Graphics::TexturePixelFormat;
+using KalaGraphics::Graphics::MaterialType2D;
+using KalaGraphics::Graphics::MaterialType3D;
+using KalaGraphics::Graphics::Material;
 using KalaGraphics::Import::FontData;
 using KalaGraphics::Import::GlyphData;
 using KalaGraphics::Import::ImportMeshData;
@@ -568,14 +571,6 @@ namespace MetalMetropolis::Test
 
         if (input->IsMouseButtonDoubleClicked(MouseButton::M_LEFT))
         {
-            cubeData.faceDir = cubeData.faceDir == FaceDirection::F_IN
-                ? FaceDirection::F_OUT
-                : FaceDirection::F_IN;
-
-            mesh->SetMeshData(Mesh::GenerateMeshData(cubeData));
-        }
-        else if (input->IsMouseButtonDoubleClicked(MouseButton::M_RIGHT))
-        {
             cubeData.normalType = cubeData.normalType == NormalType::N_FLAT
                 ? NormalType::N_SMOOTH
                 : NormalType::N_FLAT;
@@ -617,14 +612,6 @@ namespace MetalMetropolis::Test
 
         if (input->IsMouseButtonDoubleClicked(MouseButton::M_LEFT))
         {
-            pyramidData.faceDir = pyramidData.faceDir == FaceDirection::F_IN
-                ? FaceDirection::F_OUT
-                : FaceDirection::F_IN;
-
-            mesh->SetMeshData(Mesh::GenerateMeshData(pyramidData));
-        }
-        else if (input->IsMouseButtonDoubleClicked(MouseButton::M_RIGHT))
-        {
             pyramidData.normalType = pyramidData.normalType == NormalType::N_FLAT
                 ? NormalType::N_SMOOTH
                 : NormalType::N_FLAT;
@@ -665,14 +652,6 @@ namespace MetalMetropolis::Test
         }
 
         if (input->IsMouseButtonDoubleClicked(MouseButton::M_LEFT))
-        {
-            sphereData.faceDir = sphereData.faceDir == FaceDirection::F_IN
-                ? FaceDirection::F_OUT
-                : FaceDirection::F_IN;
-
-            mesh->SetMeshData(Mesh::GenerateMeshData(sphereData));
-        }
-        else if (input->IsMouseButtonDoubleClicked(MouseButton::M_RIGHT))
         {
             sphereData.normalType = sphereData.normalType == NormalType::N_FLAT
                 ? NormalType::N_SMOOTH
@@ -798,15 +777,24 @@ namespace MetalMetropolis::Test
         //sync ids before generating mesh
         EngineCore::SyncID();
 
-        Mesh* mesh = Mesh::Initialize(
-            shader->GetID(),
-            texture->GetID());
+        Mesh* mesh = Mesh::Initialize(shader->GetID());
         if (!mesh)
         {
             KalaWindowCore::ForceClose(
                 "Game core error",
                 "Failed to initialize test mesh!");
         }
+
+        Material* mat{};
+        string err = Material::GetRegistry().GetContent(mesh->GetMaterialID(), mat);
+        if (!err.empty())
+        {
+            KalaWindowCore::ForceClose(
+                "Game core error",
+                "Failed to initialize test mesh because its material was invalid! Reason: " + err);
+        }
+
+        mat->SetBaseColorTextureID(texture->GetID());
 
         if (!mesh->Is2D()) mesh->SetMeshData(std::move(meshData));
 
@@ -891,6 +879,15 @@ namespace MetalMetropolis::Test
                                     + "' because one of its primitives failed to initialize!");
                             }
 
+                            Material* mat{};
+                            string err = Material::GetRegistry().GetContent(primitive->GetMaterialID(), mat);
+                            if (!err.empty())
+                            {
+                                KalaWindowCore::ForceClose(
+                                    "Game core error",
+                                    "Failed to initialize mesh because its material was invalid! Reason: " + err);
+                            }
+
                             primitive->SetMeshData(
                             {
                                 .vertices = vector<Vertex>(primitiveData.meshData.vertices),
@@ -906,15 +903,15 @@ namespace MetalMetropolis::Test
 
                             const ImportMaterialData& matData = primitiveData.matData;
 
-                            primitive->SetColor(vec4(matData.baseColor));
+                            mat->SetBaseColor(vec4(matData.baseColor));
 
                             if (matData.alphaMode != AlphaMode::A_OPAQUE)
                             {
-                                primitive->SetAlphaMode(matData.alphaMode);
+                                mat->SetAlphaMode(matData.alphaMode);
 
                                 if (matData.alphaMode == AlphaMode::A_MASK)
                                 {
-                                    primitive->SetAlphaCutoff(matData.alphaCutoff);
+                                    mat->SetAlphaCutoff(matData.alphaCutoff);
                                 }
                             }
 
@@ -926,7 +923,7 @@ namespace MetalMetropolis::Test
                                 meshTex->SetSize(matData.textureData.size);
                                 meshTex->SetPixelFormat(matData.textureData.pixelFormat);
 
-                                primitive->SetTextureID(meshTex->GetID());
+                                mat->SetBaseColorTextureID(meshTex->GetID());
                             }
 
                             importedMeshes.push_back(primitive);
@@ -957,6 +954,15 @@ namespace MetalMetropolis::Test
         if (input->IsKeyPressed(KeyboardButton::K_SPACE))
         {
             static ImportTexture* importTex{};
+
+            Material* mat{};
+            string err = Material::GetRegistry().GetContent(mesh->GetMaterialID(), mat);
+            if (!err.empty())
+            {
+                KalaWindowCore::ForceClose(
+                    "Game core error",
+                    "Failed to attach texture onto mesh '" + to_string(mesh->GetID()) + "' because its material was invalid! Reason: " + err);
+            }
 
             if (importTex) importTex->Destroy();
 
@@ -994,10 +1000,10 @@ namespace MetalMetropolis::Test
                 texture->GetPixelFormat() == TexturePixelFormat::FORMAT_BASIC_R8G8B8A8
                 || texture->GetPixelFormat() == TexturePixelFormat::FORMAT_SRGB_R8G8B8A8;
 
-            if (isTransparent != (mesh->GetAlphaMode() == AlphaMode::A_BLEND
-                || mesh->GetAlphaMode() == AlphaMode::A_MASK))
+            if (isTransparent != (mat->GetAlphaMode() == AlphaMode::A_BLEND
+                || mat->GetAlphaMode() == AlphaMode::A_MASK))
             {
-                mesh->SetAlphaMode(isTransparent ? AlphaMode::A_BLEND : AlphaMode::A_OPAQUE);
+                mat->SetAlphaMode(isTransparent ? AlphaMode::A_BLEND : AlphaMode::A_OPAQUE);
             }
         }
     }

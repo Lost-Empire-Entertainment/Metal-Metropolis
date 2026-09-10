@@ -25,6 +25,7 @@
 #include "graphics/kg_mesh.hpp"
 #include "graphics/kg_texture.hpp"
 #include "graphics/kg_camera.hpp"
+#include "graphics/kg_material.hpp"
 #include "import/kg_import_font.hpp"
 #include "import/kg_import_texture.hpp"
 #include "core/kg_export_object.hpp"

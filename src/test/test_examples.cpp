@@ -834,8 +834,7 @@ namespace MetalMetropolis::Test
                 Log::Print(
                     "Failed to import glb/gltf file because none was selected!",
                     "GAME_CORE",
-                    LogType::LOG_ERROR,
-                    2);
+                    LogType::LOG_WARNING);
 
                 return;
             }
@@ -972,8 +971,7 @@ namespace MetalMetropolis::Test
                 Log::Print(
                     "Failed to import png texture because none was selected!",
                     "GAME_CORE",
-                    LogType::LOG_ERROR,
-                    2);
+                    LogType::LOG_WARNING);
 
                 return;
             }

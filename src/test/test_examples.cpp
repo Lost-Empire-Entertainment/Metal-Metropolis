@@ -481,14 +481,14 @@ namespace MetalMetropolis::Test
 
             if (!glyphPixelData.empty()) 
             {
-                GlyphData& glyphData = font->GetGlyphData(
+                GlyphData* glyphData = font->GetGlyphData(
                     font->GetFontData(),
                     keycode);
 
                 vec2 finalSize = 
                 {
-                    fabsf(glyphData.size.x),
-                    fabsf(glyphData.size.y)
+                    fabsf(glyphData->size.x),
+                    fabsf(glyphData->size.y)
                 };
 
                 fontTexture->SetSize(finalSize);

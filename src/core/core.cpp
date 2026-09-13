@@ -15,6 +15,7 @@
 #include "graphics/ee_window.hpp"
 #include "graphics/ee_scene.hpp"
 #include "graphics/kw_window.hpp"
+#include "graphics/kw_window_global.hpp"
 #include "core/kw_input.hpp"
 #include "core/kw_core.hpp"
 #include "graphics/kg_context.hpp"
@@ -38,17 +39,15 @@ using KalaHeaders::KalaMath::vec3;
 using KalaHeaders::KalaMath::Transform3D;
 using KalaHeaders::KalaMath::Transform2D;
 
-using KalaHeaders::KalaString::IsAlpha;
-using KalaHeaders::KalaString::IsNumber;
-
 using KalaHeaders::KalaKeyStandards::KeyboardButton;
-using KalaHeaders::KalaKeyStandards::GetUTFByKey;
 
 using MetalMetropolis::Test::Examples;
 
 using ElypsoEngine::Core::AppConfig;
 using ElypsoEngine::Graphics::EngineWindow;
 using KalaWindow::Graphics::ProcessWindow;
+using KalaWindow::Graphics::FileType;
+using KalaWindow::Graphics::Window_Global;
 using KalaWindow::Core::Input;
 using KalaWindow::Core::KalaWindowCore;
 using KalaGraphics::Graphics::GraphicsContext;
@@ -72,7 +71,6 @@ using KalaGraphics::Import::ImportFont;
 using KalaGraphics::PrimitiveWidgets::Text;
 
 using std::string;
-using std::string_view;
 using std::filesystem::path;
 using std::vector;
 
@@ -107,6 +105,9 @@ static Texture* vp1_Tex_font{};
 
 static Mesh* vp1_Mesh2D_fontBackground{};
 static Texture* vp1_Tex_fontBackground{};
+
+static Text* vp1_Text_typeTest{};
+static Mesh* vp1_Mesh2D_typeTest{};
 
 extern const AppConfig ElypsoEngine::Core::appConfig = 
 {
@@ -296,81 +297,9 @@ void ElypsoEngine::Core::Init()
     scast<Transform3D&>(vp1_Mesh3D_groundTest->GetTransform()).setsize(newSize);
 
     //
-    // CREATE FONT MESH
-    //
-
-    /*
-
-    string _ = Shader::GetRegistry().GetContent(
-        ew1_gctx_vp1->GetRootShaderID(RootShaderTarget::T_FONT),
-        vp1_Shader2D_font);
-
-    vp1_Tex_font = Texture::Initialize(
-        vp1_Shader2D_font->GetID(),
-        { 
-            .format = TexturePixelFormat::FORMAT_BASIC_R8,
-            //.filterMode = TextureFilterMode::FILTER_NEAREST
-        });
-
-    vp1_Mesh2D_font = Examples::Test_Create_Mesh(
-        vp1_Shader2D_font,
-        {});
-
-    Material* fontMeshMat{};
-    err = Material::GetRegistry().GetContent(vp1_Mesh2D_font->GetMaterialID(), fontMeshMat);
-    if (!err.empty())
-    {
-        KalaWindowCore::ForceClose(
-            "Metal Metropolis core error",
-            "Failed to initialize font mesh because its material was invalid! Reason: " + err);
-    }
-
-    //change material type before assigning color
-    fontMeshMat->SetMaterial2DType(MaterialType2D::M_FONT);
-
-    //font color is black
-    fontMeshMat->SetBaseColor( { vec3{ 0.0f }, 1.0f } );
-
-    fontMeshMat->SetBaseColorTextureID(vp1_Tex_font->GetID());
-
-    //assign texture to new slot
-
-    scast<Transform2D&>(vp1_Mesh2D_font->GetTransform()).setsize(50);
-    vp1_Mesh2D_font->SetViewportAnchorPosition(AnchorPosition::P_TOP_RIGHT);
-    vp1_Mesh2D_font->SetLocalAnchorPosition(AnchorPosition::P_TOP_RIGHT);
-
-    vp1_Tex_fontBackground = Texture::Initialize(
-        vp1_Shader2D_primary->GetID(),
-        {});
-
-    vp1_Mesh2D_fontBackground = Examples::Test_Create_Mesh(
-        vp1_Shader2D_primary,
-        {});
-
-    Material* fontBackgroundMat{};
-    err = Material::GetRegistry().GetContent(vp1_Mesh2D_fontBackground->GetMaterialID(), fontBackgroundMat);
-    if (!err.empty())
-    {
-        KalaWindowCore::ForceClose(
-            "Metal Metropolis core error",
-            "Failed to initialize font background mesh because its material was invalid! Reason: " + err);
-    }
-
-    fontBackgroundMat->SetBaseColorTextureID(vp1_Tex_fontBackground->GetID());
-
-    scast<Transform2D&>(vp1_Mesh2D_fontBackground->GetTransform()).setsize(50);
-    vp1_Mesh2D_fontBackground->SetViewportAnchorPosition(AnchorPosition::P_TOP_RIGHT);
-    vp1_Mesh2D_fontBackground->SetLocalAnchorPosition(AnchorPosition::P_TOP_RIGHT);
-
-    vp1_Mesh2D_font->SetDrawOrderIndex(100);
-    vp1_Mesh2D_fontBackground->SetDrawOrderIndex(50);
-    */
-
-    //
     // SELECT AND INITIALIZE FONT
     //
 
-    /*
     //initialize from selected font path
 
     vector<path> files = Window_Global::GetFiles(
@@ -392,10 +321,10 @@ void ElypsoEngine::Core::Init()
     font = ImportFont::Initialize(
         path(files.front()),
         64);
-    */
 
     //initialize from known font path
 
+    /*
     path fontName = path("LeagueGothic") / "LeagueGothic-Regular.otf";
     path fontPath = exePath.parent_path() / "files" / "fonts" / fontName;
 
@@ -409,6 +338,7 @@ void ElypsoEngine::Core::Init()
             "Metal Metropolis core error",
             "Failed to import font '" + fontName.string() + "'!");
     }
+    */
 
     /*
     Examples::Test_Print_Glyph_Atlas_To_Texture(
@@ -417,6 +347,30 @@ void ElypsoEngine::Core::Init()
         vp1_Mesh2D_font,
         vp1_Mesh2D_fontBackground);
     */
+
+    //
+    // CREATE TEST FONT
+    //
+
+    vp1_Text_typeTest = Text::Initialize(
+        font->GetID(),
+        ew1_gctx_vp1->GetID());
+
+    vp1_Text_typeTest->SetEditState(true);
+
+    Mesh* vp1_Mesh2D_typeTest{};
+    err = Mesh::GetRegistry().GetContent(vp1_Text_typeTest->GetMeshID(), vp1_Mesh2D_typeTest);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to initialize text because its mesh '" 
+            + to_string(vp1_Text_typeTest->GetMeshID()) + "' was invalid! Reason: " + err);
+    }
+
+    vp1_Mesh2D_typeTest->SetViewportAnchorPosition(AnchorPosition::P_CENTER);
+    vp1_Mesh2D_typeTest->SetLocalAnchorPosition(AnchorPosition::P_CENTER);
+    scast<Transform2D&>(vp1_Mesh2D_typeTest->GetTransform()).addpos({ 0.0f, 50.0f });
 
     //sync after kg objects are done with initialization
     EngineCore::SyncID();
@@ -440,54 +394,6 @@ void ElypsoEngine::Core::Update()
         ew1_pw_input,
         vp1_Cam3D_primary,
         EngineCore::GetDeltaTime());
-
-    static Text* newText{};
-    static u32 framesHeld{};
-    
-    if (!newText)
-    {
-        newText = Text::Initialize(
-            font->GetID(),
-            ew1_gctx_vp1->GetID());
-
-        Mesh* m{};
-        string err = Mesh::GetRegistry().GetContent(newText->GetMeshID(), m);
-        if (!err.empty())
-        {
-            KalaWindowCore::ForceClose(
-                "Metal Metropolis core error",
-                "Failed to initialize text because its mesh '" 
-                + to_string(newText->GetMeshID()) + "' was invalid! Reason: " + err);
-        }
-
-        m->SetViewportAnchorPosition(AnchorPosition::P_CENTER);
-        m->SetLocalAnchorPosition(AnchorPosition::P_CENTER);
-        scast<Transform2D&>(m->GetTransform()).addpos({ 0.0f, 50.0f });
-    }
-
-    if (ew1_pw_input->IsKeyHeld(KeyboardButton::K_BACKSPACE)
-        || ew1_pw_input->IsKeyPressed(KeyboardButton::K_BACKSPACE))
-    {
-        if (ew1_pw_input->IsKeyHeld(KeyboardButton::K_BACKSPACE))
-        {
-            if (framesHeld < 50) framesHeld++;
-            else                 newText->RemoveText(1);
-        }
-        else
-        {
-            newText->RemoveText(1);
-        }
-
-    }
-    else
-    {
-        if (framesHeld > 0) framesHeld = 0;
-
-        if (!ew1_pw_input->GetPressedKeys().empty())
-        {
-            newText->AddUTF({ GetUTFByKey(scast<u32>(ew1_pw_input->GetPressedKeys().front())) });
-        }
-    }
 
     /*
     Examples::Test_Print_Glyph_To_Texture(

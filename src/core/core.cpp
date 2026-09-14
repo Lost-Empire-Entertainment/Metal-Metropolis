@@ -302,13 +302,13 @@ void ElypsoEngine::Core::Init()
 
     //initialize from selected font path
 
+    /*
     vector<path> files = Window_Global::GetFiles(
         FileType::FILE_CUSTOM,
         {
             ".ttf",
             ".otf"
-            },
-            path(exePath.parent_path() / "files" / "fonts"));
+            });
 
     if (files.empty())
     {
@@ -321,10 +321,10 @@ void ElypsoEngine::Core::Init()
     font = ImportFont::Initialize(
         path(files.front()),
         64);
+    */
 
     //initialize from known font path
 
-    /*
     path fontName = path("LeagueGothic") / "LeagueGothic-Regular.otf";
     path fontPath = exePath.parent_path() / "files" / "fonts" / fontName;
 
@@ -338,7 +338,6 @@ void ElypsoEngine::Core::Init()
             "Metal Metropolis core error",
             "Failed to import font '" + fontName.string() + "'!");
     }
-    */
 
     /*
     Examples::Test_Print_Glyph_Atlas_To_Texture(
@@ -349,7 +348,7 @@ void ElypsoEngine::Core::Init()
     */
 
     //
-    // CREATE TEST FONT
+    // CREATE TEXT WIDGET
     //
 
     vp1_Text_typeTest = Text::Initialize(
@@ -357,6 +356,7 @@ void ElypsoEngine::Core::Init()
         ew1_gctx_vp1->GetID());
 
     vp1_Text_typeTest->SetEditState(true);
+    vp1_Text_typeTest->SetMaxCharacters(256);
 
     Mesh* vp1_Mesh2D_typeTest{};
     err = Mesh::GetRegistry().GetContent(vp1_Text_typeTest->GetMeshID(), vp1_Mesh2D_typeTest);
@@ -368,8 +368,10 @@ void ElypsoEngine::Core::Init()
             + to_string(vp1_Text_typeTest->GetMeshID()) + "' was invalid! Reason: " + err);
     }
 
+    vp1_Mesh2D_typeTest->SetIgnoreHoverState(false);
+
     vp1_Mesh2D_typeTest->SetViewportAnchorPosition(AnchorPosition::P_CENTER);
-    vp1_Mesh2D_typeTest->SetLocalAnchorPosition(AnchorPosition::P_CENTER);
+    vp1_Mesh2D_typeTest->SetSelfAnchorPosition(AnchorPosition::P_CENTER);
     scast<Transform2D&>(vp1_Mesh2D_typeTest->GetTransform()).addpos({ 0.0f, 50.0f });
 
     //sync after kg objects are done with initialization

@@ -42,7 +42,7 @@ namespace MetalMetropolis::Test
     class Examples
     {
     public:
-        static string Test_Get_FPS(f64 secondsToWait);
+        static array<string, 4> Test_Get_FPS(f64 secondsToWait);
 
         static void Test_Popup_And_File_Drag(ProcessWindow* pw);
 

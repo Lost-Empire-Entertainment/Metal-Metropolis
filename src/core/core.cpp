@@ -210,7 +210,9 @@ void ElypsoEngine::Core::Init()
             "Metal Metropolis core error",
             "Failed to get primary 3D camera from viewport '" + to_string(ew1_gctx_vp1->GetID()) + "'! Reason: " + err);
     }
-    scast<Transform3D&>(vp1_Cam3D_primary->GetTransform()).setpos({ 0.0f, 1.0f, 0.0f });
+    Transform3D& camTransform = scast<Transform3D&>(vp1_Cam3D_primary->GetTransform());
+    camTransform.setpos({ 0.0f, 1.0f, 0.0f });
+    camTransform.update();
     vp1_Cam3D_primary->SetSensitivityMultiplier(0.175f);
     vp1_Cam3D_primary->SetSpeedMultiplier(7.5f);
 
@@ -294,7 +296,9 @@ void ElypsoEngine::Core::Init()
         .vertices = std::move(vertices),
         .indices = std::move(indices)
     });
-    scast<Transform3D&>(vp1_Mesh3D_groundTest->GetTransform()).setsize(newSize);
+    Transform3D& groundTransform = scast<Transform3D&>(vp1_Mesh3D_groundTest->GetTransform());
+    groundTransform.setsize(newSize);
+    groundTransform.update();
 
     //
     // SELECT AND INITIALIZE FONT
@@ -355,7 +359,7 @@ void ElypsoEngine::Core::Init()
         font->GetID(),
         ew1_gctx_vp1->GetID());
 
-    vp1_Text_typeTest->SetEditState(true);
+    //vp1_Text_typeTest->SetEditState(true);
     vp1_Text_typeTest->SetMaxCharacters(256);
 
     Mesh* vp1_Mesh2D_typeTest{};
@@ -371,8 +375,10 @@ void ElypsoEngine::Core::Init()
     vp1_Mesh2D_typeTest->SetIgnoreHoverState(false);
 
     vp1_Mesh2D_typeTest->SetViewportAnchorPosition(AnchorPosition::P_CENTER);
-    vp1_Mesh2D_typeTest->SetSelfAnchorPosition(AnchorPosition::P_CENTER);
-    scast<Transform2D&>(vp1_Mesh2D_typeTest->GetTransform()).addpos({ 0.0f, 50.0f });
+    vp1_Mesh2D_typeTest->SetSelfAnchorPosition(AnchorPosition::P_TOP_CENTER);
+    //Transform2D& typeTestTransform = scast<Transform2D&>(vp1_Mesh2D_typeTest->GetTransform());
+    //typeTestTransform.addpos({ 0.0f, 100.0f });
+    //typeTestTransform.update();
 
     //sync after kg objects are done with initialization
     EngineCore::SyncID();
@@ -396,6 +402,25 @@ void ElypsoEngine::Core::Update()
         ew1_pw_input,
         vp1_Cam3D_primary,
         EngineCore::GetDeltaTime());
+
+    Examples::Test_Import_Meshes(ew1_pw_input, vp1_Shader3D_primary);
+
+    Examples::Test_VSync_Input(ew1_gctx, ew1_pw_input);
+
+    static string lastFPS{};
+    string fps = Examples::Test_Get_FPS(0.5f)[0];
+
+    if (lastFPS != ""
+        && fps == "")
+    {
+        lastFPS = fps;
+        vp1_Text_typeTest->SetText("");
+    }
+    if (lastFPS != fps)
+    {
+        lastFPS = fps;
+        vp1_Text_typeTest->SetText(fps, true);
+    }
 
     /*
     Examples::Test_Print_Glyph_To_Texture(

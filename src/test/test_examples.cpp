@@ -170,9 +170,9 @@ static constexpr InputCode combo_toggle_cam_move[] =
 
 namespace MetalMetropolis::Test
 {
-    string Examples::Test_Get_FPS(f64 secondsToWait)
+    array<string, 4> Examples::Test_Get_FPS(f64 secondsToWait)
     {
-        if (!fpsState) return "";
+        if (!fpsState) return {};
 
         static f64 cachedFPS = EngineCore::GetAverageFPS();
         static f64 cachedFrameLength = EngineCore::GetAverageFrameLength();
@@ -191,15 +191,13 @@ namespace MetalMetropolis::Test
             start = steady_clock::now();
         }
         
-        return format(
-            "\nAverage: {:.2f} fps,"
-            "\nframe length: {:.2f}ms,"
-            "\n1% low: {:.2f} fps,"
-            "\n0.1% low: {:.2f} fps",
-            cachedFPS,
-            cachedFrameLength,
-            cachedOnePercentFPS,
-            cachedZeroOnePercentFPS);
+        return
+        {
+            format("average: {:.2f} fps", cachedFPS),
+            format("frame length: {:.2f}ms", cachedFrameLength),
+            format("1% low: {:.2f} fps", cachedOnePercentFPS),
+            format("0.1% low: {:.2f} fps", cachedZeroOnePercentFPS)
+        };
     }
 
     void Examples::Test_Popup_And_File_Drag(ProcessWindow* pw)
@@ -493,8 +491,12 @@ namespace MetalMetropolis::Test
 
                 fontTexture->SetSize(finalSize);
                 
-                scast<Transform2D&>(fontMesh->GetTransform()).setsize(finalSize * 4);
-                scast<Transform2D&>(fontBackgroundMesh->GetTransform()).setsize(finalSize * 4);
+                Transform2D& fontMeshTransform = scast<Transform2D&>(fontMesh->GetTransform());
+                fontMeshTransform.setsize(finalSize * 4);
+                fontMeshTransform.update();
+                Transform2D& fontBackgroundTransform = scast<Transform2D&>(fontBackgroundMesh->GetTransform());
+                fontBackgroundTransform.setsize(finalSize * 4);
+                fontBackgroundTransform.update();
 
                 fontTexture->SetPixelData(std::move(glyphPixelData));
             }
@@ -514,8 +516,12 @@ namespace MetalMetropolis::Test
 
         fontTexture->SetSize(finalSize);
         
-        scast<Transform2D&>(fontMesh->GetTransform()).setsize(finalSize / 2);
-        scast<Transform2D&>(fontBackgroundMesh->GetTransform()).setsize(finalSize / 2);
+        Transform2D& fontMeshTransform = scast<Transform2D&>(fontMesh->GetTransform());
+        fontMeshTransform.setsize(finalSize / 2);
+        fontMeshTransform.update();
+        Transform2D& fontBackgroundTransform = scast<Transform2D&>(fontBackgroundMesh->GetTransform());
+        fontBackgroundTransform.setsize(finalSize / 2);
+        fontBackgroundTransform.update();
 
         fontTexture->SetPixelData(vector<u8>{ font->GetFontData().atlasPixels });
     }
@@ -894,6 +900,7 @@ namespace MetalMetropolis::Test
                             mt.setpos(nodeData.transform.getpos(PosTarget::POS_LOCAL));
                             mt.setrotquat(nodeData.transform.getrotquat(RotTarget::ROT_LOCAL));
                             mt.setsize(nodeData.transform.getsize(SizeTarget::SIZE_LOCAL));
+                            mt.update();
 
                             primitive->FlipFaceDirection();
 

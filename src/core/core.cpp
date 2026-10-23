@@ -28,7 +28,7 @@
 #include "graphics/kg_camera.hpp"
 #include "graphics/kg_material.hpp"
 #include "import/kg_import_font.hpp"
-#include "widgets_primitive/kg_widget_text.hpp"
+#include "widgets/kg_text.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
@@ -68,7 +68,7 @@ using KalaGraphics::Graphics::TextureFilterMode;
 using KalaGraphics::Graphics::TextureWrapMode;
 using KalaGraphics::Graphics::Camera;
 using KalaGraphics::Import::ImportFont;
-using KalaGraphics::PrimitiveWidgets::Text;
+using KalaGraphics::Widgets::Text;
 
 using std::string;
 using std::filesystem::path;

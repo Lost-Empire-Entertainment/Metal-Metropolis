@@ -151,6 +151,7 @@ binarytype: "executable"
 standard: "c++20"
 sources: "src"
 headers:
+    "include",
     "external/kalaheaders/include",
     "external/elypsoengine/include",
     "external/kalawindow/include",

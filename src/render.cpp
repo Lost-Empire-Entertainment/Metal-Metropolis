@@ -3,91 +3,88 @@
 //This is free software, and you are welcome to redistribute it under certain conditions.
 //Read LICENSE.md for more information.
 
-#include <filesystem>
-#include <chrono>
-#include <format>
-
 #include "log_utils.hpp"
+#include "math_utils.hpp"
 #include "key_standards.hpp"
 
 #include "core/ee_core.hpp"
 #include "graphics/ee_window.hpp"
-#include "graphics/ee_scene.hpp"
+#include "core/kw_core.hpp"
+#include "core/kw_input.hpp"
 #include "graphics/kw_window.hpp"
 #include "graphics/kw_window_global.hpp"
-#include "core/kw_input.hpp"
-#include "core/kw_core.hpp"
 #include "graphics/kg_context.hpp"
-#include "graphics/kg_viewport.hpp"
 #include "graphics/kg_hit_test.hpp"
+#include "graphics/kg_viewport.hpp"
 #include "graphics/kg_shader.hpp"
-#include "graphics/kg_mesh.hpp"
-#include "graphics/kg_material.hpp"
-#include "graphics/kg_texture.hpp"
 #include "graphics/kg_camera.hpp"
 #include "graphics/kg_material.hpp"
+#include "graphics/kg_texture.hpp"
+#include "graphics/kg_mesh.hpp"
+#include "widgets/kg_text.hpp"
 #include "import/kg_import_font.hpp"
 #include "import/kg_import_mesh.hpp"
-#include "widgets/kg_text.hpp"
+
+#include "render.hpp"
 
 using KalaHeaders::KalaLog::Log;
 using KalaHeaders::KalaLog::LogType;
 
 using KalaHeaders::KalaMath::epsilon;
-using KalaHeaders::KalaMath::vec4;
-using KalaHeaders::KalaMath::vec3;
 using KalaHeaders::KalaMath::vec2;
-using KalaHeaders::KalaMath::Transform3D;
+using KalaHeaders::KalaMath::vec3;
+using KalaHeaders::KalaMath::vec4;
 using KalaHeaders::KalaMath::Transform2D;
+using KalaHeaders::KalaMath::Transform3D;
 using KalaHeaders::KalaMath::PosTarget;
 using KalaHeaders::KalaMath::RotTarget;
 using KalaHeaders::KalaMath::SizeTarget;
 
 using KalaHeaders::KalaKeyStandards::KeyboardButton;
 
-using ElypsoEngine::Core::AppConfig;
 using ElypsoEngine::Core::EngineCore;
 using ElypsoEngine::Graphics::EngineWindow;
+using KalaWindow::Core::KalaWindowCore;
+using KalaWindow::Core::Input;
 using KalaWindow::Graphics::ProcessWindow;
 using KalaWindow::Graphics::FileType;
 using KalaWindow::Graphics::Window_Global;
-using KalaWindow::Core::Input;
-using KalaWindow::Core::KalaWindowCore;
+using KalaGraphics::Graphics::VSyncState;
 using KalaGraphics::Graphics::GraphicsContext;
-using KalaGraphics::Graphics::Viewport;
-using KalaGraphics::Graphics::ViewportType;
-using KalaGraphics::Graphics::Shader;
 using KalaGraphics::Graphics::HitTest;
-using KalaGraphics::Graphics::AnchorPosition;
-using KalaGraphics::Graphics::Mesh_Cube;
-using KalaGraphics::Graphics::Mesh;
-using KalaGraphics::Graphics::Vertex;
+using KalaGraphics::Graphics::ViewportType;
+using KalaGraphics::Graphics::Viewport;
+using KalaGraphics::Graphics::Shader;
+using KalaGraphics::Graphics::Camera;
+using KalaGraphics::Graphics::AlphaMode;
 using KalaGraphics::Graphics::Material;
-using KalaGraphics::Graphics::Texture;
-using KalaGraphics::Graphics::TexturePixelFormat;
 using KalaGraphics::Graphics::TextureFilterMode;
 using KalaGraphics::Graphics::TextureWrapMode;
 using KalaGraphics::Graphics::TextureData;
-using KalaGraphics::Graphics::AlphaMode;
+using KalaGraphics::Graphics::Texture;
+using KalaGraphics::Graphics::Vertex;
+using KalaGraphics::Graphics::AnchorPosition;
+using KalaGraphics::Graphics::Mesh_Cube;
 using KalaGraphics::Graphics::MeshData;
-using KalaGraphics::Graphics::Camera;
-using KalaGraphics::Graphics::VSyncState;
+using KalaGraphics::Graphics::Mesh;
+using KalaGraphics::Widgets::Text;
 using KalaGraphics::Import::ImportFont;
-using KalaGraphics::Import::ImportPrimitiveData;
 using KalaGraphics::Import::ImportNodeData;
+using KalaGraphics::Import::ImportPrimitiveData;
 using KalaGraphics::Import::ImportMaterialData;
 using KalaGraphics::Import::ImportMesh;
-using KalaGraphics::Widgets::Text;
 
 using std::string;
-using std::filesystem::path;
-using std::vector;
-using std::array;
+using std::to_string;
 using std::format;
-using std::chrono::time_point;
+using std::array;
+using std::vector;
+using std::filesystem::path;
 using std::chrono::steady_clock;
-using std::chrono::seconds;
+using std::chrono::time_point;
 using std::chrono::duration;
+
+static bool isInitialized{};
 
 static bool isCameraMovable{};
 
@@ -121,13 +118,7 @@ static Mesh* vp1_Mesh2D_typeTest{};
 
 static Mesh* vp1_Mesh2D_typeTestBackground{};
 
-extern const AppConfig ElypsoEngine::Core::appConfig = 
-{
-    .title = "Metal Metropolis Pre-Release 5",
-    .pos = 600
-};
-
-static array<string, 4> Test_Get_FPS(f64 secondsToWait)
+static array<string, 4> GetFPS(f64 secondsToWait)
 {
     static f64 cachedFPS = EngineCore::GetAverageFPS();
     static f64 cachedFrameLength = EngineCore::GetAverageFrameLength();
@@ -155,7 +146,7 @@ static array<string, 4> Test_Get_FPS(f64 secondsToWait)
     };
 }
 
-static void Test_VSync_Input(
+static void ToggleVSync(
     GraphicsContext* gctx,
     Input* input)
 {
@@ -179,7 +170,7 @@ static void Test_VSync_Input(
     }
 }
 
-static void Test_Camera_Toggle(Input* input)
+static void ToggleCamera(Input* input)
 {
     //if (input->IsComboPressed(combo_toggle_cam_move))
     if (input->IsKeyPressed(KeyboardButton::K_ESC))
@@ -202,7 +193,7 @@ static void Test_Camera_Toggle(Input* input)
     }
 }
 
-static void Test_Camera_Move(
+static void MoveCamera(
     Input* input,
     Camera* cam,
     f32 deltaTime)
@@ -266,7 +257,7 @@ static void Test_Camera_Move(
         deltaTime);
 }
 
-static void Test_Import_Meshes(
+static void ImportMeshes(
     Input* input,
     Shader* shader)
 {
@@ -395,7 +386,7 @@ static void Test_Import_Meshes(
     }
 }
 
-static Texture* Test_Create_Texture(
+static Texture* CreateTexture(
     Shader* shader,
     TextureData&& textureData)
 {
@@ -415,47 +406,38 @@ static Texture* Test_Create_Texture(
     return texture;
 }
 
-static Mesh* Test_Create_Mesh(
+static Mesh* CreateMesh(
         Shader* shader,
         MeshData&& meshData)
+{
+    //sync ids before generating mesh
+    EngineCore::SyncID();
+
+    Mesh* mesh = Mesh::Initialize(shader->GetID());
+    if (!mesh)
     {
-        //sync ids before generating mesh
-        EngineCore::SyncID();
-
-        Mesh* mesh = Mesh::Initialize(shader->GetID());
-        if (!mesh)
-        {
-            KalaWindowCore::ForceClose(
-                "Game core error",
-                "Failed to initialize test mesh!");
-        }
-
-        Material* mat{};
-        string err = Material::GetRegistry().GetContent(mesh->GetMaterialID(), mat);
-        if (!err.empty())
-        {
-            KalaWindowCore::ForceClose(
-                "Game core error",
-                "Failed to initialize test mesh because its material was invalid! Reason: " + err);
-        }
-
-        if (!mesh->Is2D()) mesh->SetMeshData(std::move(meshData));
-
-        return mesh;
+        KalaWindowCore::ForceClose(
+            "Game core error",
+            "Failed to initialize test mesh!");
     }
 
-void ElypsoEngine::Core::Init()
-{
-    //print all user system info for now always at the very top
+    Material* mat{};
+    string err = Material::GetRegistry().GetContent(mesh->GetMaterialID(), mat);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Game core error",
+            "Failed to initialize test mesh because its material was invalid! Reason: " + err);
+    }
 
-    Log::Print(KalaWindowCore::GetCPUInfoString());
-    Log::Print(" ");
-    Log::Print(KalaWindowCore::GetGPUInfoString());
-    Log::Print(" ");
-    Log::Print(KalaWindowCore::GetRAMInfoString(true));
-    Log::Print(" ");
-    Log::Print(KalaWindowCore::GetOSInfoString());
-    Log::Print(" ");
+    if (!mesh->Is2D()) mesh->SetMeshData(std::move(meshData));
+
+    return mesh;
+}
+
+static void GetCoreStuff()
+{
+    exePath = KalaWindowCore::GetExePath();
 
     string err = EngineWindow::GetRegistry().GetContent(0, ew1, false);
     if (!err.empty())
@@ -560,9 +542,10 @@ void ElypsoEngine::Core::Init()
             "Metal Metropolis core error",
             "Failed to get input from engine windows process window '" + to_string(ew1_pw->GetID()) + "'! Reason: " + err);
     }
+}
 
-    exePath = KalaWindowCore::GetExePath();
-
+static void InitializeGameStuff()
+{
     //sync before creating kg objects
     EngineCore::SyncID();
 
@@ -571,7 +554,7 @@ void ElypsoEngine::Core::Init()
     //
 
     Texture* fallbackTex{};
-    err = Texture::GetRegistry().GetContent(vp1_Shader3D_primary->GetFallbackTextureID(), fallbackTex);
+    string err = Texture::GetRegistry().GetContent(vp1_Shader3D_primary->GetFallbackTextureID(), fallbackTex);
     if (!err.empty())
     {
         KalaWindowCore::ForceClose(
@@ -579,7 +562,7 @@ void ElypsoEngine::Core::Init()
             "Failed to get fallback texture from shader '" + to_string(vp1_Shader3D_primary->GetID()) + "'! Reason: " + err);
     }
 
-    vp1_Tex_fallback_groundTest = Test_Create_Texture(
+    vp1_Tex_fallback_groundTest = CreateTexture(
         vp1_Shader3D_primary,
         {
             .pixelData = vector<u8>(fallbackTex->GetPixelData()),
@@ -592,7 +575,7 @@ void ElypsoEngine::Core::Init()
     // CREATE GROUND
     //
 
-    vp1_Mesh3D_groundTest = Test_Create_Mesh(
+    vp1_Mesh3D_groundTest = CreateMesh(
         vp1_Shader3D_primary,
         Mesh::GenerateMeshData(Mesh_Cube{.edgeCount = 4}));
 
@@ -687,7 +670,7 @@ void ElypsoEngine::Core::Init()
         ew1_gctx_vp1->GetID());
     
     //vp1_Text_typeTest->SetEditState(true);
-    vp1_Text_typeTest->SetMaxCharacters(256);
+    vp1_Text_typeTest->SetMaxCharacters(50);
 
     err = Mesh::GetRegistry().GetContent(vp1_Text_typeTest->GetMeshID(), vp1_Mesh2D_typeTest);
     if (!err.empty())
@@ -697,22 +680,28 @@ void ElypsoEngine::Core::Init()
             "Failed to initialize text because its mesh '" 
             + to_string(vp1_Text_typeTest->GetMeshID()) + "' was invalid! Reason: " + err);
     }
-    
-    Transform2D& typeTestTransform = scast<Transform2D&>(vp1_Mesh2D_typeTest->GetTransform());
 
     vp1_Mesh2D_typeTest->SetIgnoreHoverState(false);
 
     vp1_Mesh2D_typeTest->SetViewportAnchorPosition(AnchorPosition::P_TOP_LEFT);
     vp1_Mesh2D_typeTest->SetSelfAnchorPosition(AnchorPosition::P_TOP_LEFT);
 
+    Material* typeTestMeshMat{};
+    err = Material::GetRegistry().GetContent(vp1_Mesh2D_typeTest->GetMaterialID(), typeTestMeshMat);
+    if (!err.empty())
+    {
+        KalaWindowCore::ForceClose(
+            "Metal Metropolis core error",
+            "Failed to initialize text because its mesh material '" 
+            + to_string(vp1_Mesh2D_typeTest->GetMaterialID()) + "' was invalid! Reason: " + err);
+    }
+    typeTestMeshMat->SetBaseColor( vec4{0.0f, 0.0f, 0.0f, 1.0f} );
+    typeTestMeshMat->SetAlphaMode(AlphaMode::A_BLEND);
+
     vp1_Mesh2D_typeTestBackground = Mesh::Initialize(vp1_Shader2D_primary->GetID());
 
     vp1_Mesh2D_typeTestBackground->SetViewportAnchorPosition(AnchorPosition::P_TOP_LEFT);
     vp1_Mesh2D_typeTestBackground->SetSelfAnchorPosition(AnchorPosition::P_TOP_LEFT);
-    
-    Transform2D& typeTestBackgroundTransform = scast<Transform2D&>(vp1_Mesh2D_typeTestBackground->GetTransform());
-    typeTestBackgroundTransform.setsize({ typeTestTransform.getsize(SizeTarget::SIZE_LOCAL) });
-    typeTestBackgroundTransform.update();
 
     Material* typeTestBackgroundMat{};
     err = Material::GetRegistry().GetContent(vp1_Mesh2D_typeTestBackground->GetMaterialID(), typeTestBackgroundMat);
@@ -723,75 +712,81 @@ void ElypsoEngine::Core::Init()
             "Failed to initialize text because its background mesh material '" 
             + to_string(vp1_Mesh2D_typeTestBackground->GetMaterialID()) + "' was invalid! Reason: " + err);
     }
-    typeTestBackgroundMat->SetBaseColor(0.2f);
+    typeTestBackgroundMat->SetBaseColor( vec4{0.5f, 0.5f, 0.8f, 0.3f} );
+    typeTestBackgroundMat->SetAlphaMode(AlphaMode::A_BLEND);
 
     //sync after kg objects are done with initialization
     EngineCore::SyncID();
-
-    KalaWindowCore::ForceClose("crash test title", "crash test description");
 }
 
-void ElypsoEngine::Core::EarlyUpdate()
+namespace MetalMetropolis::Core
 {
-
-}
-
-void ElypsoEngine::Core::FixedUpdate()
-{
-
-}
-
-void ElypsoEngine::Core::Update()
-{
-    Test_Camera_Toggle(ew1_pw_input);
-
-    Test_Camera_Move(
-        ew1_pw_input,
-        vp1_Cam3D_primary,
-        EngineCore::GetDeltaTime());
-
-    Test_Import_Meshes(ew1_pw_input, vp1_Shader3D_primary);
-
-    Test_VSync_Input(ew1_gctx, ew1_pw_input);
-
-    static string lastFPS{};
-    string fps = Test_Get_FPS(0.5f)[0];
-
-    if (lastFPS != ""
-        && fps == "")
+    bool Render::IsInitialized() { return isInitialized; }
+    void Render::Initialize()
     {
-        lastFPS = fps;
-        vp1_Text_typeTest->SetText("");
-    }
-    if (lastFPS != fps)
-    {
-        lastFPS = fps;
-        vp1_Text_typeTest->SetText(fps, true);
+        if (isInitialized)
+        {
+            Log::Print(
+                "Failed to initialize renderer because it has already been initialized!",
+                "MM_RENDER",
+                LogType::LOG_WARNING);
+
+            return;
+        }
+
+        GetCoreStuff();
+        InitializeGameStuff();
+
+        isInitialized = true;
     }
 
-    Transform2D& typeTestTransform = scast<Transform2D&>(vp1_Mesh2D_typeTest->GetTransform());
-    Transform2D& typeTestBackgroundTransform = scast<Transform2D&>(vp1_Mesh2D_typeTestBackground->GetTransform());
-
-    const vec2 textSize = typeTestTransform.getsize(SizeTarget::SIZE_LOCAL);
-    const vec2 textBackgroundSize = typeTestBackgroundTransform.getsize(SizeTarget::SIZE_LOCAL);
-
-    if (textBackgroundSize != textSize)
+    void Render::Update()
     {
-        typeTestBackgroundTransform.setsize(textSize);
-        typeTestBackgroundTransform.update();
+        ToggleCamera(ew1_pw_input);
+
+        MoveCamera(
+            ew1_pw_input,
+            vp1_Cam3D_primary,
+            EngineCore::GetDeltaTime());
+
+        ImportMeshes(ew1_pw_input, vp1_Shader3D_primary);
+
+        ToggleVSync(ew1_gctx, ew1_pw_input);
+
+        static string lastFPS{};
+        string fps = GetFPS(0.5f)[0];
+
+        if (lastFPS != ""
+            && fps == "")
+        {
+            lastFPS = fps;
+            vp1_Text_typeTest->SetText("");
+        }
+        if (lastFPS != fps)
+        {
+            lastFPS = fps;
+            vp1_Text_typeTest->SetText(fps, true);
+        }
+
+        Transform2D& typeTestTransform = scast<Transform2D&>(vp1_Mesh2D_typeTest->GetTransform());
+        Transform2D& typeTestBackgroundTransform = scast<Transform2D&>(vp1_Mesh2D_typeTestBackground->GetTransform());
+
+        const vec2 textSize = typeTestTransform.getsize(SizeTarget::SIZE_LOCAL);
+        const vec2 textBackgroundSize = typeTestBackgroundTransform.getsize(SizeTarget::SIZE_LOCAL);
+
+        if (textBackgroundSize != textSize)
+        {
+            typeTestBackgroundTransform.setsize(textSize);
+            typeTestBackgroundTransform.update();
+        }
+
+        /*
+        Test_Print_Glyph_To_Texture(
+            ew1_pw_input,
+            font,
+            vp1_Tex_font,
+            vp1_Mesh2D_font,
+            vp1_Mesh2D_fontBackground);
+        */
     }
-
-    /*
-    Test_Print_Glyph_To_Texture(
-        ew1_pw_input,
-        font,
-        vp1_Tex_font,
-        vp1_Mesh2D_font,
-        vp1_Mesh2D_fontBackground);
-    */
-}
-
-void ElypsoEngine::Core::LateUpdate()
-{
-    
 }
